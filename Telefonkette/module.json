@@ -1,0 +1,12 @@
+{
+    "id": "{58F82675-99C8-5CA1-8333-68CDAD6EBE6E}",
+    "name": "Telefonkette",
+    "type": 3,
+    "vendor": "",
+    "aliases": [],
+    "parentRequirements": [],
+    "childRequirements": [],
+    "implemented": [],
+    "prefix": "TK",
+    "url": "https://github.com/symcon/Telefonkette"
+}

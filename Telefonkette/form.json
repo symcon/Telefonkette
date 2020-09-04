@@ -1,0 +1,51 @@
+{
+    "elements": [
+        {
+            "type": "SelectVariable",
+            "name": "Trigger",
+            "caption": "Trigger"
+        },
+        {
+            "type": "SelectInstance",
+            "name": "VoIP",
+            "caption": "Voice over IP Instance"
+        },
+        {
+            "type": "List",
+            "name": "PhoneNumbers",
+            "caption": "Phone Numbers",
+            "add": true,
+            "delete": true,
+            "columns": [
+                {
+                    "name": "PhoneNumber",
+                    "caption": "Phone Number",
+                    "width": "auto",
+                    "add": 0,
+                    "edit": {
+                        "type": "ValidationTextBox",
+                        "validate": "^\\+?[0-9]*$"
+                    }
+                }
+            ]
+        },
+        {
+            "type": "NumberSpinner",
+            "name": "MaxSyncCallCount",
+            "caption": "Number of Simultaneous Calls"
+        },
+        {
+            "type": "NumberSpinner",
+            "name": "CallDuration",
+            "caption": "Call Duration"
+        },
+        {
+            "type": "ValidationTextBox",
+            "name": "ConfirmKey",
+            "caption": "Confirmation Key",
+            "validate": "^[0-9#*]$" 
+        }
+    ],
+    "actions": [],
+    "status": []
+}
