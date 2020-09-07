@@ -23,6 +23,9 @@ class Telefonkette extends IPSModule
         $this->RegisterPropertyInteger('CallDuration', 15);
         $this->RegisterPropertyString('ConfirmKey', '1');
 
+        //Variables
+        $this->RegisterVariableString('CallConfirmed', $this->Translate('Call Confirmed'), '', 0);
+
         //Timer
         $this->RegisterTimer('UpdateCall', 0, 'TK_UpdateCalls($_IPS[\'TARGET\']);');
     }
@@ -56,6 +59,7 @@ class Telefonkette extends IPSModule
             case VM_UPDATE:
                 if ($Data[0] && ($this->GetStatus() == 102)) {
                     $this->SetTimerInterval('UpdateCall', 1000);
+                    $this->UpdateCalls();
                 }
                 break;
             case 21000 /*VOIP_EVENT*/:
@@ -68,8 +72,8 @@ class Telefonkette extends IPSModule
                         IPS_LogMessage('VoIP', $this->Translate('A DTMF signal was received'));
                         switch ($Data[2]) {
                             case $this->ReadPropertyString('ConfirmKey'):
-                                $this->SetTimerInterval('UpdateCall', 0);
-                                $this->SetBuffer('ListPosition', 0);
+                                $this->SetValue('CallConfirmed', VoIP_GetConnection($this->ReadPropertyInteger('VoIP'), $Data[0])['Number']);
+                                VoIP_Disconnect($this->ReadPropertyInteger('VoIP'), $Data[0]);
 
                                 //Wenn Abbruch dann alle aktiven Anrufe beenden
                                 $activeCalls = json_decode($this->GetBuffer('ActiveCalls'), true);
@@ -77,7 +81,7 @@ class Telefonkette extends IPSModule
                                 foreach ($activeCalls as $activeCallID => $activeCallTime) {
                                     VoIP_Disconnect($this->ReadPropertyInteger('VoIP'), $activeCallID);
                                 }
-                                $this->SetBuffer('ActiveCalls', '[]');
+                                $this->reset();
                             break;
 
                             default:
@@ -131,11 +135,9 @@ class Telefonkette extends IPSModule
             $this->SetBuffer('ActiveCalls', json_encode($activeCalls));
 
         // Abbrechen wenn niemand erreicht wurde
-        } elseif ((count($activeCalls) === 0) && ($listPosition === count($phoneNumbers))) {
-            $this->SetTimerInterval('UpdateCall', 0);
-            $this->SetBuffer('ListPosition', 0);
-            $this->SendDebug('ActiveCalls', json_encode($activeCalls), 0);
-            $this->SetBuffer('ActiveCalls', json_encode([]));
+        } elseif ((count($activeCalls) == 0) && ($listPosition == count($phoneNumbers))) {
+            $this->SetValue('CallConfirmed', $this->Translate('No one was reached'));
+            $this->reset();
             IPS_LogMessage('Telefonkette', $this->Translate('No one was reached'));
             return;
         }
@@ -163,5 +165,11 @@ class Telefonkette extends IPSModule
         }
 
         $this->SetStatus($returnState);
+    }
+
+    private function reset() {
+        $this->SetTimerInterval('UpdateCall', 0);
+        $this->SetBuffer('ListPosition', 0);
+        $this->SetBuffer('ActiveCalls', '[]');
     }
 }

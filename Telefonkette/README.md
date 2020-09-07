@@ -49,7 +49,15 @@ DTMF Bestätigungstaste       | Taste, mit der ein Anruf bestätigt wird
 
 Die Statusvariablen/Kategorien werden automatisch angelegt. Das Löschen einzelner kann zu Fehlfunktionen führen.
 
-Es werden keine neuen Statusvariablen oder Profile angelegt.
+##### Statusvariablen
+
+Name             | Typ    | Beschreibung
+---------------- | ------ | -------------------------------
+Anruf bestätigt  | String | Beinhaltet die Nummer, welche den Anruf bestätigt hat 
+
+##### Profile:
+
+Es werden keine zusätzlichen Profile hinzugefügt.
 
 ### 6. WebFront
 

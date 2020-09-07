@@ -18,7 +18,8 @@
             "Trigger variable doesn't exist": "Auslöservariable existiert nicht",
             "Trigger variable must be of type boolean": "Auslöservariable muss vom Typ Boolean sein",
             "Selected VoIP instance doesn't exist": "Ausgewählte VoIP Instanz existiert nicht",
-            "Selected insatnce is no VoIP instance": "Ausgewählte Instanz ist keine VoIP Instanz"
+            "Selected insatnce is no VoIP instance": "Ausgewählte Instanz ist keine VoIP Instanz",
+            "Call Confirmed": "Anruf bestätigt"
         }
     }
 }
