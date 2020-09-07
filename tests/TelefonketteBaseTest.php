@@ -61,7 +61,7 @@ class TelefonketteBaseTest extends TestCase
                         );
         IPS_SetConfiguration($instanceID, $configuration);
         IPS_ApplyChanges($instanceID);
-        
+
         //3 numbers 2 syncCalls - 0 confirms
         TK_setTime($this->TelefonketteID, strtotime('September 1 2020 12:00:00'));
         TK_UpdateCalls($instanceID);
@@ -74,7 +74,7 @@ class TelefonketteBaseTest extends TestCase
         IPS\InstanceManager::getInstanceInterface($instanceID)->MessageSink(0, $this->VoIPID, 21000, [0, 'DTMF', '1']);
         $activeConnections = VOIP_StubsGetConnections($this->VoIPID);
         $this->assertEquals(count($activeConnections), 0);
-        
+
         //Call untill one number moves up
         TK_setTime($this->TelefonketteID, strtotime('September 1 2020 13:00:00'));
         TK_UpdateCalls($instanceID);
@@ -89,7 +89,7 @@ class TelefonketteBaseTest extends TestCase
 
         //Reset
         IPS\InstanceManager::getInstanceInterface($instanceID)->MessageSink(0, $this->VoIPID, 21000, [3, 'DTMF', '1']);
-        
+
         //Answer call and keep connection
         TK_setTime($this->TelefonketteID, strtotime('September 1 2020 13:00:00'));
         TK_UpdateCalls($instanceID);
