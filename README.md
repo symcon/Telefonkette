@@ -7,4 +7,4 @@
 Folgende Module beinhaltet das Telefonkette Repository:
 
 - __Telefonkette__ ([Dokumentation](Telefonkette))  
-	Kurze Beschreibung des Moduls.
+	Das Telefonkette-Modul ermöglicht es eine Liste von Telefonnummern nacheinander anzurufen.
