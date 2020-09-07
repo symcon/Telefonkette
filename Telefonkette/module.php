@@ -45,7 +45,7 @@ class Telefonkette extends IPSModule
         $this->SetBuffer('ListPosition', 0);
 
         $this->setErrorState();
-        if ( $this->GetStatus() != 102) {
+        if ($this->GetStatus() != 102) {
             return;
         }
 
@@ -167,7 +167,8 @@ class Telefonkette extends IPSModule
         $this->SetStatus($returnState);
     }
 
-    private function reset() {
+    private function reset()
+    {
         $this->SetTimerInterval('UpdateCall', 0);
         $this->SetBuffer('ListPosition', 0);
         $this->SetBuffer('ActiveCalls', '[]');
