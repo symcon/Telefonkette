@@ -81,11 +81,11 @@ class Telefonkette extends IPSModule
                             break;
 
                             default:
-                                IPS_LogMessage('Telefonkette', $this->Translate('Unknown DTMF symbol:') . ' ' . $Data[2]);
+                                IPS_LogMessage('Telefonkette', $this->Translate('Unprocessed DTMF symbol:') . ' ' . $Data[2]);
                             }
                         break;
                     default:
-                        IPS_LogMessage('Telefonkette', $this->Translate('Unknown VoIP event:') . ' ' . $Data[1]);
+                        IPS_LogMessage('Telefonkette', $this->Translate('Unprocessed VoIP event:') . ' ' . $Data[1]);
                         break;
                 }
             break;
