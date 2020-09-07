@@ -8,7 +8,7 @@
         {
             "type": "SelectInstance",
             "name": "VoIP",
-            "caption": "Voice over IP Instance"
+            "caption": "VoIP Instance"
         },
         {
             "type": "List",
@@ -37,15 +37,20 @@
         {
             "type": "NumberSpinner",
             "name": "CallDuration",
-            "caption": "Call Duration"
+            "caption": "Call Duration",
+            "suffix": "Seconds"
         },
         {
             "type": "ValidationTextBox",
             "name": "ConfirmKey",
-            "caption": "Confirmation Key",
+            "caption": "DTMF Confirmation Key",
             "validate": "^[0-9#*]$" 
         }
     ],
-    "actions": [],
-    "status": []
+    "status": [
+        {"code": 200, "caption": "Trigger variable doesn't exist", "icon": "error"},
+        {"code": 201, "caption": "Trigger variable must be of type boolean", "icon": "error"},
+        {"code": 202, "caption": "Selected VoIP instance doesn't exist", "icon": "error"},
+        {"code": 203, "caption": "Selected insatnce is no VoIP instance", "icon": "error"}
+    ]
 }
