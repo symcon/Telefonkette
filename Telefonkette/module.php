@@ -41,7 +41,8 @@ class Telefonkette extends IPSModule
         $this->SetBuffer('ActiveCalls', '[]');
         $this->SetBuffer('ListPosition', 0);
 
-        if ($this->setErrorState() != 102) {
+        $this->setErrorState();
+        if ( $this->GetStatus() != 102) {
             return;
         }
 
