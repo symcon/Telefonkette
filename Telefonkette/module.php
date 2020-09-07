@@ -23,9 +23,6 @@ class Telefonkette extends IPSModule
         $this->RegisterPropertyInteger('CallDuration', 15);
         $this->RegisterPropertyString('ConfirmKey', '1');
 
-        //Variables
-        $this->RegisterVariableBoolean('CallConfirmed', $this->Translate('Call Confirmed'), '', 0);
-
         //Timer
         $this->RegisterTimer('UpdateCall', 0, 'TK_UpdateCalls($_IPS[\'TARGET\']);');
     }
@@ -41,11 +38,12 @@ class Telefonkette extends IPSModule
         //Never delete this line!
         parent::ApplyChanges();
 
-        //TODO: Check for valid VoIP instance
-        //TODO: Check for valid Trigger instance
-
         $this->SetBuffer('ActiveCalls', '[]');
         $this->SetBuffer('ListPosition', 0);
+
+        if ($this->setErrorState() != 102) {
+            return;
+        }
 
         $this->RegisterMessage($this->ReadPropertyInteger('Trigger'), VM_UPDATE);
         $this->RegisterMessage($this->ReadPropertyInteger('VoIP'), 21000 /*VOIP_EVENT*/);
@@ -55,7 +53,7 @@ class Telefonkette extends IPSModule
     {
         switch ($MessageID) {
             case VM_UPDATE:
-                if ($this->GetStatus() == 102) {
+                if ($Data[0] && ($this->GetStatus() == 102)) {
                     $this->SetTimerInterval('UpdateCall', 1000);
                 }
                 break;
@@ -66,9 +64,9 @@ class Telefonkette extends IPSModule
                 }
                 switch ($Data[1]) {
                     case 'DTMF':
-                        IPS_LogMessage('VoIP', 'Es wurde ein DTMF Signal empfangen');
+                        IPS_LogMessage('VoIP', $this->Translate('A DTMF signal was received'));
                         switch ($Data[2]) {
-                            case '1':
+                            case $this->ReadPropertyString('ConfirmKey'):
                                 $this->SetTimerInterval('UpdateCall', 0);
                                 $this->SetBuffer('ListPosition', 0);
 
@@ -82,30 +80,30 @@ class Telefonkette extends IPSModule
                             break;
 
                             default:
-                                //Default DTMF
+                                IPS_LogMessage('Telefonkette', $this->Translate('Unknown DTMF symbol:') . ' ' . $Data[2]);
+                            }
                         break;
-                        }
-                        // FIXME: No break. Please add proper comment if intentional
                     default:
-                        //Throw error
+                        IPS_LogMessage('Telefonkette', $this->Translate('Unknown VoIP event:') . ' ' . $Data[1]);
                         break;
                 }
             break;
 
             default:
-                //TODO: throw error
             }
     }
 
     public function UpdateCalls()
     {
+        if ($this->GetStatus() != 102) {
+            return;
+        }
         //Liste der aktiven Anrufe durchgehen ob Zeit überschritten
         $activeCalls = json_decode($this->GetBuffer('ActiveCalls'), true);
         foreach ($activeCalls as $activeCallID => $activeCallTime) {
-            IPS_LogMessage('Telefonkette', 'Zeit: ' . $this->getTime() . '  Anrufzeit:' . $activeCallTime);
+            IPS_LogMessage('Telefonkette', sprintf($this->Translate('Time: %s | Call Time: %s'), date('H:i:s d.m.Y', $this->GetTime()), date('H:i:s d.m.Y', $activeCallTime)));
             //Wenn der Anruf abgenommen wird, diesen nicht beenden
             $call = VoIP_GetConnection($this->ReadPropertyInteger('VoIP'), $activeCallID);
-            $this->SendDebug('Call', json_encode($call), 0);
             if ($call['Connected']) {
                 $activeCallTime = $this->getTime();
             }
@@ -137,8 +135,32 @@ class Telefonkette extends IPSModule
             $this->SetBuffer('ListPosition', 0);
             $this->SendDebug('ActiveCalls', json_encode($activeCalls), 0);
             $this->SetBuffer('ActiveCalls', json_encode([]));
-            IPS_LogMessage('Telefonkette', 'Es wurde niemand erreicht');
+            IPS_LogMessage('Telefonkette', $this->Translate('No one was reached'));
             return;
         }
+    }
+
+    private function setErrorState()
+    {
+        $trigger = $this->ReadPropertyInteger('Trigger');
+        $voIP = $this->ReadPropertyInteger('VoIP');
+        //102 suggests everything is working not the active status
+        $returnState = 102;
+        if ($trigger == 0) {
+            $returnState = 104;
+        } elseif (!IPS_VariableExists($trigger)) {
+            $returnState = 200;
+        } elseif (IPS_GetVariable($trigger)['VariableType'] != VARIABLETYPE_BOOLEAN) {
+            $returnState = 201;
+        }
+        if ($voIP == 0 && $returnState < 200) {
+            $returnState = 104;
+        } elseif (!IPS_InstanceExists($voIP)) {
+            $returnState = 202;
+        } elseif (IPS_GetInstance($voIP)['ModuleInfo']['ModuleID'] != '{A4224A63-49EA-445F-8422-22EF99D8F624}') {
+            $returnState = 203;
+        }
+
+        $this->SetStatus($returnState);
     }
 }
