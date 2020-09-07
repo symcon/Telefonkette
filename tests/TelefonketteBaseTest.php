@@ -8,6 +8,7 @@ include_once __DIR__ . '/stubs/GlobalStubs.php';
 include_once __DIR__ . '/stubs/KernelStubs.php';
 include_once __DIR__ . '/stubs/ModuleStubs.php';
 include_once __DIR__ . '/stubs/MessageStubs.php';
+include_once __DIR__ . '/stubs/ConstantStubs.php';
 
 use PHPUnit\Framework\TestCase;
 
@@ -27,8 +28,8 @@ class TelefonketteBaseTest extends TestCase
         //Register our library we need for testing
         IPS\ModuleLoader::loadLibrary(__DIR__ . '/../library.json');
 
-        $this->VoIPID = IPS_CreateInstance('{A4224A63-49EA-445F-8422-22EF99D8F624}');
         $this->TelefonketteID = IPS_CreateInstance('{58F82675-99C8-5CA1-8333-68CDAD6EBE6E}');
+        $this->VoIPID = IPS_CreateInstance('{A4224A63-49EA-445F-8422-22EF99D8F624}');
 
         parent::setUp();
     }
@@ -60,7 +61,8 @@ class TelefonketteBaseTest extends TestCase
                         );
         IPS_SetConfiguration($instanceID, $configuration);
         IPS_ApplyChanges($instanceID);
-
+        
+        //3 numbers 2 syncCalls - 0 confirms
         TK_setTime($this->TelefonketteID, strtotime('September 1 2020 12:00:00'));
         TK_UpdateCalls($instanceID);
         TK_UpdateCalls($instanceID);
@@ -70,11 +72,39 @@ class TelefonketteBaseTest extends TestCase
         $this->assertEquals($activeConnections[0]['Number'], '132168');
         $this->assertEquals($activeConnections[1]['Number'], '123456');
         IPS\InstanceManager::getInstanceInterface($instanceID)->MessageSink(0, $this->VoIPID, 21000, [0, 'DTMF', '1']);
-        print_r(VOIP_StubsGetConnections($this->VoIPID));
         $activeConnections = VOIP_StubsGetConnections($this->VoIPID);
         $this->assertEquals(count($activeConnections), 0);
-        //VoIP_StubsAnswerOutgoingCall($this->VoIPID, 0);
-        $this->assertTrue(true);
+        
+        //Call untill one number moves up
+        TK_setTime($this->TelefonketteID, strtotime('September 1 2020 13:00:00'));
+        TK_UpdateCalls($instanceID);
+        TK_setTime($this->TelefonketteID, strtotime('September 1 2020 13:00:10'));
+        TK_UpdateCalls($instanceID);
+        TK_setTime($this->TelefonketteID, strtotime('September 1 2020 13:00:16'));
+        TK_UpdateCalls($instanceID);
+        $activeConnections = VOIP_StubsGetConnections($this->VoIPID);
+        $this->assertEquals(count($activeConnections), 2);
+        $this->assertEquals($activeConnections[3]['Number'], '123456');
+        $this->assertEquals($activeConnections[4]['Number'], '654321');
+
+        //Reset
+        IPS\InstanceManager::getInstanceInterface($instanceID)->MessageSink(0, $this->VoIPID, 21000, [3, 'DTMF', '1']);
+        
+        //Answer call and keep connection
+        TK_setTime($this->TelefonketteID, strtotime('September 1 2020 13:00:00'));
+        TK_UpdateCalls($instanceID);
+        TK_setTime($this->TelefonketteID, strtotime('September 1 2020 13:00:10'));
+        TK_UpdateCalls($instanceID);
+        VoIP_StubsAnswerOutgoingCall($this->VoIPID, 5);
+        TK_setTime($this->TelefonketteID, strtotime('September 1 2020 13:00:30'));
+        TK_UpdateCalls($instanceID);
+        $activeConnections = VOIP_StubsGetConnections($this->VoIPID);
+        print_r($activeConnections[5]['Number']);
+        $this->assertEquals(count($activeConnections), 2);
+        $this->assertEquals($activeConnections[5]['Number'], '132168');
+        $this->assertTrue($activeConnections[5]['Connected']);
+        $this->assertEquals($activeConnections[7]['Number'], '654321');
+        $this->assertFalse($activeConnections[7]['Connected']);
     }
 
     protected function CreateActionVariable(int $VariableType)
