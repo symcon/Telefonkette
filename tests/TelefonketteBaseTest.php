@@ -55,7 +55,7 @@ class TelefonketteBaseTest extends TestCase
                     ]),
                 'MaxSyncCallCount' => 2,
                 'CallDuraion'      => 15,
-                'ConfirmKey'      => '1'
+                'ConfirmKey'       => '1'
             ]
                         );
         IPS_SetConfiguration($instanceID, $configuration);
