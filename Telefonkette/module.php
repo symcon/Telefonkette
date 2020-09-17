@@ -48,7 +48,12 @@ class Telefonkette extends IPSModule
         if ($this->GetStatus() != 102) {
             return;
         }
-
+        //Unregister all previous registered messages
+        foreach ($this->GetMessageList() as $objectID => $messages) {
+            foreach ($messages as $message) {
+                $this->UnregisterMessage($objectID, $message);
+            }
+        }
         $this->RegisterMessage($this->ReadPropertyInteger('Trigger'), VM_UPDATE);
         $this->RegisterMessage($this->ReadPropertyInteger('VoIP'), 21000 /*VOIP_EVENT*/);
     }
