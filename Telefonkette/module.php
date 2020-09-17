@@ -15,7 +15,7 @@ class Telefonkette extends IPSModule
 
         //Attribures
         $this->RegisterAttributeString('ActiveCalls', '[]');
-        $this->RegisterAttributeInteger('ListPosition', 0);
+        $this->RegisterAttributeInteger('ListPosition', '0');
 
         //Properties
         $this->RegisterPropertyInteger('Trigger', 0);
@@ -44,7 +44,7 @@ class Telefonkette extends IPSModule
         parent::ApplyChanges();
 
         $this->SetBuffer('ActiveCalls', '[]');
-        $this->SetBuffer('ListPosition', 0);
+        $this->SetBuffer('ListPosition', '0');
 
         $this->setErrorState();
         if ($this->GetStatus() != 102) {
@@ -77,13 +77,12 @@ class Telefonkette extends IPSModule
                 }
                 switch ($Data[1]) {
                     case 'DTMF':
-                        IPS_LogMessage('VoIP', $this->Translate('A DTMF signal was received'));
+                        $this->SendDebug('VoIP', $this->Translate('A DTMF signal was received'), 0);
                         switch ($Data[2]) {
                             case $this->ReadPropertyString('ConfirmKey'):
                                 $this->SetValue('CallConfirmed', VoIP_GetConnection($this->ReadPropertyInteger('VoIP'), $Data[0])['Number']);
                                 VoIP_Disconnect($this->ReadPropertyInteger('VoIP'), $Data[0]);
-
-                                //Wenn Abbruch dann alle aktiven Anrufe beenden
+                                //If confirmed end all remaining calls
                                 $activeCalls = json_decode($this->GetBuffer('ActiveCalls'), true);
                                 $this->SendDebug('ActiveCalls', json_encode($activeCalls), 0);
                                 foreach ($activeCalls as $activeCallID => $activeCallTime) {
@@ -93,11 +92,12 @@ class Telefonkette extends IPSModule
                             break;
 
                             default:
-                                IPS_LogMessage('Telefonkette', $this->Translate('Unprocessed DTMF symbol:') . ' ' . $Data[2]);
+                                $this->SendDebug('Telefonkette', $this->Translate('Unprocessed DTMF symbol:') . ' ' . $Data[2], 0);
                             }
                         break;
+
                     default:
-                        IPS_LogMessage('Telefonkette', $this->Translate('Unprocessed VoIP event:') . ' ' . $Data[1]);
+                        $this->SendDebug('Telefonkette', $this->Translate('Unprocessed VoIP event:') . ' ' . $Data[1], 0);
                         break;
                 }
             break;
@@ -111,44 +111,41 @@ class Telefonkette extends IPSModule
         if ($this->GetStatus() != 102) {
             return;
         }
-        //Liste der aktiven Anrufe durchgehen ob Zeit überschritten
+        //Check if remaining calls exceed the time limit
         $activeCalls = json_decode($this->GetBuffer('ActiveCalls'), true);
         foreach ($activeCalls as $activeCallID => $activeCallTime) {
             IPS_LogMessage('Telefonkette', sprintf($this->Translate('Time: %s | Call Time: %s'), date('H:i:s d.m.Y', $this->GetTime()), date('H:i:s d.m.Y', $activeCallTime)));
-            //Wenn der Anruf abgenommen wird, diesen nicht beenden
+            //If the call is answered don't end it
             $call = VoIP_GetConnection($this->ReadPropertyInteger('VoIP'), $activeCallID);
             if ($call['Connected']) {
-                $activeCallTime = $this->getTime();
+                continue;
             }
 
-            $difference = ($this->getTime() - $activeCallTime);
+            //End calls which exceed the time limit
             if (($this->getTime() - $activeCallTime) > $this->ReadPropertyInteger('CallDuration')) {
                 VoIP_Disconnect($this->ReadPropertyInteger('VoIP'), $activeCallID);
                 unset($activeCalls[$activeCallID]);
                 $this->SendDebug('ActiveCalls', json_encode($activeCalls), 0);
             }
-            $this->SetBuffer('ActiveCalls', json_encode($activeCalls));
         }
 
-        //Wenn Platz und nicht am Ende der Telefonnummernliste -> dann weiterer Anruf
-        $activeCalls = json_decode($this->GetBuffer('ActiveCalls'), true);
+        //If maxSyncCalls not reached and not at the end of the number list
         $phoneNumbers = json_decode($this->ReadPropertyString('PhoneNumbers'), true);
-        $listPosition = $this->GetBuffer('ListPosition');
+        $listPosition = json_decode($this->GetBuffer('ListPosition'));
         if ((count($activeCalls) < $this->ReadPropertyInteger('MaxSyncCallCount')) && ($listPosition < count($phoneNumbers))) {
             $call = VoIP_Connect($this->ReadPropertyInteger('VoIP'), $phoneNumbers[$listPosition]['PhoneNumber']);
             $this->SendDebug('Call', json_encode($call), 0);
-            $this->SetBuffer('ListPosition', $listPosition + 1);
+            $this->SetBuffer('ListPosition', json_encode($listPosition + 1));
             $activeCalls[$call] = $this->getTime();
             $this->SendDebug('ActiveCalls', json_encode($activeCalls), 0);
-            $this->SetBuffer('ActiveCalls', json_encode($activeCalls));
-
-        // Abbrechen wenn niemand erreicht wurde
-        } elseif ((count($activeCalls) == 0) && ($listPosition == count($phoneNumbers))) {
+        }
+        //Cancel if no one was reached
+        elseif ((count($activeCalls) == 0) && ($listPosition == count($phoneNumbers))) {
             $this->SetValue('CallConfirmed', $this->Translate('No one was reached'));
             $this->reset();
             IPS_LogMessage('Telefonkette', $this->Translate('No one was reached'));
-            return;
         }
+        $this->SetBuffer('ActiveCalls', json_encode($activeCalls));
     }
 
     private function setErrorState()
@@ -186,7 +183,7 @@ class Telefonkette extends IPSModule
     private function reset()
     {
         $this->SetTimerInterval('UpdateCall', 0);
-        $this->SetBuffer('ListPosition', 0);
+        $this->SetBuffer('ListPosition', '0');
         $this->SetBuffer('ActiveCalls', '[]');
     }
 }
