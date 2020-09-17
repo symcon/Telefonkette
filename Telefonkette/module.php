@@ -6,6 +6,8 @@ include_once __DIR__ . '/timeTrait.php';
 class Telefonkette extends IPSModule
 {
     use TestTime;
+
+    const VOIP_EVENT = 21000;
     public function Create()
     {
         //Never delete this line!
@@ -55,7 +57,7 @@ class Telefonkette extends IPSModule
             }
         }
         $this->RegisterMessage($this->ReadPropertyInteger('Trigger'), VM_UPDATE);
-        $this->RegisterMessage($this->ReadPropertyInteger('VoIP'), 21000 /*VOIP_EVENT*/);
+        $this->RegisterMessage($this->ReadPropertyInteger('VoIP'), self::VOIP_EVENT);
     }
 
     public function MessageSink($TimeStamp, $SenderID, $MessageID, $Data)
@@ -67,7 +69,8 @@ class Telefonkette extends IPSModule
                     $this->UpdateCalls();
                 }
                 break;
-            case 21000 /*VOIP_EVENT*/:
+
+            case self::VOIP_EVENT:
                 //Only handle messages for our active calls
                 if (!array_key_exists($Data[0], json_decode($this->GetBuffer('ActiveCalls'), true))) {
                     return;
