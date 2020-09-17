@@ -153,26 +153,34 @@ class Telefonkette extends IPSModule
 
     private function setErrorState()
     {
-        $trigger = $this->ReadPropertyInteger('Trigger');
-        $voIP = $this->ReadPropertyInteger('VoIP');
-        //102 suggests everything is working not the active status
-        $returnState = 102;
-        if ($trigger == 0) {
-            $returnState = 104;
-        } elseif (!IPS_VariableExists($trigger)) {
-            $returnState = 200;
-        } elseif (IPS_GetVariable($trigger)['VariableType'] != VARIABLETYPE_BOOLEAN) {
-            $returnState = 201;
-        }
-        if ($voIP == 0 && $returnState < 200) {
-            $returnState = 104;
-        } elseif (!IPS_InstanceExists($voIP)) {
-            $returnState = 202;
-        } elseif (IPS_GetInstance($voIP)['ModuleInfo']['ModuleID'] != '{A4224A63-49EA-445F-8422-22EF99D8F624}') {
-            $returnState = 203;
-        }
+        $getInstanceStatus = function ()
+        {
+            $trigger = $this->ReadPropertyInteger('Trigger');
+            $voIP = $this->ReadPropertyInteger('VoIP');
+            if ($trigger == 0) {
+                return 104;
+            }
+            if (!IPS_VariableExists($trigger)) {
+                return 200;
+            }
+            if (IPS_GetVariable($trigger)['VariableType'] != VARIABLETYPE_BOOLEAN) {
+                return 201;
+            }
+            if ($voIP == 0 && $returnState < 200) {
+                return 104;
+            }
+            if (!IPS_InstanceExists($voIP)) {
+                return 202;
+            }
+            if (IPS_GetInstance($voIP)['ModuleInfo']['ModuleID'] != '{A4224A63-49EA-445F-8422-22EF99D8F624}') {
+                return 203;
+            }
 
-        $this->SetStatus($returnState);
+            //Everything ok
+            return 102;
+        };
+
+        $this->SetStatus($getInstanceStatus());
     }
 
     private function reset()
