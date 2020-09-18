@@ -75,6 +75,7 @@ class Telefonkette extends IPSModule
                 if (!array_key_exists($Data[0], json_decode($this->GetBuffer('ActiveCalls'), true))) {
                     return;
                 }
+                $this->SendDebug('VoIP', $this->Translate('A DTMF signal was received'), 0);
                 switch ($Data[1]) {
                     case 'DTMF':
                         $this->SendDebug('VoIP', $this->Translate('A DTMF signal was received'), 0);
@@ -116,10 +117,11 @@ class Telefonkette extends IPSModule
         //Check if remaining calls exceed the time limit
         $activeCalls = json_decode($this->GetBuffer('ActiveCalls'), true);
         foreach ($activeCalls as $activeCallID => $activeCallTime) {
+            $call = VoIP_GetConnection($this->ReadPropertyInteger('VoIP'), $activeCallID);
             $this->SendDebug('Telefonkette', sprintf($this->Translate('Time: %s | Call Time: %s'), date('H:i:s d.m.Y', $this->GetTime()), date('H:i:s d.m.Y', $activeCallTime)), 0);
             //If the call is answered don't end it
-            $call = VoIP_GetConnection($this->ReadPropertyInteger('VoIP'), $activeCallID);
             if ($call['Connected']) {
+                $this->SendDebug($call['Number'], 'Connected', 0);
                 continue;
             }
 
@@ -136,7 +138,7 @@ class Telefonkette extends IPSModule
         $listPosition = json_decode($this->GetBuffer('ListPosition'));
         if ((count($activeCalls) < $this->ReadPropertyInteger('MaxSyncCallCount')) && ($listPosition < count($phoneNumbers))) {
             $call = VoIP_Connect($this->ReadPropertyInteger('VoIP'), $phoneNumbers[$listPosition]['PhoneNumber']);
-            $this->SendDebug('Call', json_encode($call), 0);
+            $this->SendDebug('New Call', json_encode($call), 0);
             $this->SetBuffer('ListPosition', json_encode($listPosition + 1));
             $activeCalls[$call] = $this->getTime();
             $this->SendDebug('ActiveCalls', json_encode($activeCalls), 0);
