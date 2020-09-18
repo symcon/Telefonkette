@@ -13,7 +13,7 @@ class Telefonkette extends IPSModule
         //Never delete this line!
         parent::Create();
 
-        //Attribures
+        //Attributes
         $this->RegisterAttributeString('ActiveCalls', '[]');
         $this->RegisterAttributeInteger('ListPosition', '0');
 
