@@ -114,7 +114,7 @@ class Telefonkette extends IPSModule
         //Check if remaining calls exceed the time limit
         $activeCalls = json_decode($this->GetBuffer('ActiveCalls'), true);
         foreach ($activeCalls as $activeCallID => $activeCallTime) {
-            IPS_LogMessage('Telefonkette', sprintf($this->Translate('Time: %s | Call Time: %s'), date('H:i:s d.m.Y', $this->GetTime()), date('H:i:s d.m.Y', $activeCallTime)));
+            $this->SendDebug('Telefonkette', sprintf($this->Translate('Time: %s | Call Time: %s'), date('H:i:s d.m.Y', $this->GetTime()), date('H:i:s d.m.Y', $activeCallTime)), 0);
             //If the call is answered don't end it
             $call = VoIP_GetConnection($this->ReadPropertyInteger('VoIP'), $activeCallID);
             if ($call['Connected']) {
@@ -143,7 +143,7 @@ class Telefonkette extends IPSModule
         elseif ((count($activeCalls) == 0) && ($listPosition == count($phoneNumbers))) {
             $this->SetValue('CallConfirmed', $this->Translate('No one was reached'));
             $this->reset();
-            IPS_LogMessage('Telefonkette', $this->Translate('No one was reached'));
+            $this->SendDebug('Telefonkette', $this->Translate('No one was reached'), 0);
         }
         $this->SetBuffer('ActiveCalls', json_encode($activeCalls));
     }
