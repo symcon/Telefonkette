@@ -89,20 +89,22 @@ class Telefonkette extends IPSModule
                                     VoIP_Disconnect($this->ReadPropertyInteger('VoIP'), $activeCallID);
                                 }
                                 $this->reset();
-                            break;
+                                break;
 
                             default:
                                 $this->SendDebug('Telefonkette', $this->Translate('Unprocessed DTMF symbol:') . ' ' . $Data[2], 0);
+                                break;
                             }
-                        break;
+                            break;
 
                     default:
                         $this->SendDebug('Telefonkette', $this->Translate('Unprocessed VoIP event:') . ' ' . $Data[1], 0);
                         break;
                 }
-            break;
+                break;
 
             default:
+                break;
             }
     }
 
