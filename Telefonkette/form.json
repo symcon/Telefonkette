@@ -33,20 +33,36 @@
         {
             "type": "NumberSpinner",
             "name": "MaxSyncCallCount",
-            "caption": "Number of Simultaneous Calls"
+            "caption": "Number of Simultaneous Calls",
+            "minimum": 1
         },
         {
             "type": "NumberSpinner",
             "name": "CallDuration",
             "caption": "Call Duration",
-            "suffix": "Seconds"
+            "suffix": "Seconds",
+            "minimum": 1
         },
         {
             "type": "ValidationTextBox",
             "name": "ConfirmKey",
             "caption": "DTMF Confirmation Key",
             "validate": "^[0-9#*]$" 
+        },
+        {
+            "type": "CheckBox",
+            "name": "ResetStatus",
+            "caption": "Automaticly Reset Status",
+            "onChange": "TK_ToggleInterval($id, $ResetStatus);"
+        },
+        {
+            "type": "NumberSpinner",
+            "name": "ResetInterval",
+            "caption": "Reset Interval",
+            "suffix": "Minutes",
+            "minimum": 1 
         }
+        
     ],
     "status": [
         {"code": 200, "caption": "Trigger variable doesn't exist", "icon": "error"},

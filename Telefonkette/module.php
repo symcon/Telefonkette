@@ -8,6 +8,8 @@ class Telefonkette extends IPSModule
     use TestTime;
 
     const VOIP_EVENT = 21000;
+    const WAITING = 0;
+    const CONFIRMED = -1;
     public function Create()
     {
         //Never delete this line!
@@ -21,15 +23,30 @@ class Telefonkette extends IPSModule
         $this->RegisterPropertyInteger('Trigger', 0);
         $this->RegisterPropertyInteger('VoIP', 0);
         $this->RegisterPropertyString('PhoneNumbers', '[]');
-        $this->RegisterPropertyInteger('MaxSyncCallCount', 0);
+        $this->RegisterPropertyInteger('MaxSyncCallCount', 2);
         $this->RegisterPropertyInteger('CallDuration', 15);
         $this->RegisterPropertyString('ConfirmKey', '1');
+        $this->RegisterPropertyBoolean('ResetStatus', false);
+        $this->RegisterPropertyInteger('ResetInterval', 10);
+
+        //Profiles
+        if (!IPS_VariableProfileExists('TK.Status')) {
+            IPS_CreateVariableProfile('TK.Status', VARIABLETYPE_INTEGER);
+            IPS_SetVariableProfileAssociation('TK.Status', -1, $this->Translate('Confirmed'), '', -1);
+            IPS_SetVariableProfileAssociation('TK.Status', 0, $this->Translate('Ready'), '', -1);
+            IPS_SetVariableProfileAssociation('TK.Status', 1, $this->Translate('List Position %d'), '', -1);
+        }
 
         //Variables
-        $this->RegisterVariableString('CallConfirmed', $this->Translate('Call Confirmed'), '', 0);
+        $this->RegisterVariableString('ConfirmNumber', $this->Translate('Call Confirmed by'), '', 0);
+        $this->RegisterVariableInteger('Status', $this->Translate('Status'), 'TK.Status', 1);
 
         //Timer
         $this->RegisterTimer('UpdateCall', 0, 'TK_UpdateCalls($_IPS[\'TARGET\']);');
+        $this->RegisterTimer('ResetStatus', 0, 'TK_ResetStatus($_IPS[\'TARGET\']);');
+
+        //Scripts
+        $this->RegisterScript('ResetStatus', $this->Translate('Reset Status'), "<?php\nTK_ResetStatus($this->InstanceID);", 2);
     }
 
     public function Destroy()
@@ -58,13 +75,18 @@ class Telefonkette extends IPSModule
         }
         $this->RegisterMessage($this->ReadPropertyInteger('Trigger'), VM_UPDATE);
         $this->RegisterMessage($this->ReadPropertyInteger('VoIP'), self::VOIP_EVENT);
+
+        //Disable automatic reset timer
+        if (!$this->ReadPropertyBoolean('ResetStatus')) {
+            $this->SetTimerInterval('ResetStatus', 0);
+        }
     }
 
     public function MessageSink($TimeStamp, $SenderID, $MessageID, $Data)
     {
         switch ($MessageID) {
             case VM_UPDATE:
-                if ($Data[0] && ($this->GetStatus() == 102)) {
+                if ($Data[0] && ($this->GetStatus() == 102) && ($this->GetValue('Status') == self::WAITING)) {
                     $this->SetTimerInterval('UpdateCall', 1000);
                     $this->UpdateCalls();
                 }
@@ -81,7 +103,8 @@ class Telefonkette extends IPSModule
                         $this->SendDebug('VoIP', $this->Translate('A DTMF signal was received'), 0);
                         switch ($Data[2]) {
                             case $this->ReadPropertyString('ConfirmKey'):
-                                $this->SetValue('CallConfirmed', VoIP_GetConnection($this->ReadPropertyInteger('VoIP'), $Data[0])['Number']);
+                                $this->SetValue('ConfirmNumber', VoIP_GetConnection($this->ReadPropertyInteger('VoIP'), $Data[0])['Number']);
+                                $this->SetValue('Status', self::CONFIRMED);
                                 VoIP_Disconnect($this->ReadPropertyInteger('VoIP'), $Data[0]);
                                 //If confirmed end all remaining calls
                                 $activeCalls = json_decode($this->GetBuffer('ActiveCalls'), true);
@@ -90,6 +113,10 @@ class Telefonkette extends IPSModule
                                     VoIP_Disconnect($this->ReadPropertyInteger('VoIP'), $activeCallID);
                                 }
                                 $this->reset();
+                                //Start auto reset timer if enabled
+                                if ($this->ReadPropertyBoolean('ResetStatus')) {
+                                    $this->SetTimerInterval('ResetStatus', $this->ReadPropertyInteger('ResetInterval') * 1000 * 60);
+                                }
                                 break;
 
                             default:
@@ -138,6 +165,7 @@ class Telefonkette extends IPSModule
         $listPosition = json_decode($this->GetBuffer('ListPosition'));
         if ((count($activeCalls) < $this->ReadPropertyInteger('MaxSyncCallCount')) && ($listPosition < count($phoneNumbers))) {
             $call = VoIP_Connect($this->ReadPropertyInteger('VoIP'), $phoneNumbers[$listPosition]['PhoneNumber']);
+            $this->SetValue('Status', $listPosition + 1);
             $this->SendDebug('New Call', json_encode($call), 0);
             $this->SetBuffer('ListPosition', json_encode($listPosition + 1));
             $activeCalls[$call] = $this->getTime();
@@ -145,13 +173,31 @@ class Telefonkette extends IPSModule
         }
         //Cancel if no one was reached
         elseif ((count($activeCalls) == 0) && ($listPosition == count($phoneNumbers))) {
-            $this->SetValue('CallConfirmed', $this->Translate('No one was reached'));
+            $this->SetValue('ConfirmNumber', $this->Translate('No one was reached'));
+            $this->SetValue('Status', self::WAITING);
             $this->reset();
             $this->SendDebug('Telefonkette', $this->Translate('No one was reached'), 0);
         }
         $this->SetBuffer('ActiveCalls', json_encode($activeCalls));
     }
 
+    public function ResetStatus()
+    {
+        $this->SetValue('Status', self::WAITING);
+        $this->SetTimerInterval('ResetStatus', 0);
+    }
+
+    public function GetConfigurationForm()
+    {
+        $form = json_decode(file_get_contents(__DIR__ . '/form.json'), true);
+        $form['elements'][7]['visible'] = $this->ReadPropertyBoolean('ResetStatus');
+        return json_encode($form);
+    }
+
+    public function ToggleInterval($visible)
+    {
+        $this->UpdateFormField('ResetInterval', 'visible', $visible);
+    }
     private function setErrorState()
     {
         $getInstanceStatus = function ()
@@ -167,7 +213,7 @@ class Telefonkette extends IPSModule
             if (IPS_GetVariable($trigger)['VariableType'] != VARIABLETYPE_BOOLEAN) {
                 return 201;
             }
-            if ($voIP == 0 && $returnState < 200) {
+            if ($voIP == 0) {
                 return 104;
             }
             if (!IPS_InstanceExists($voIP)) {
@@ -175,6 +221,9 @@ class Telefonkette extends IPSModule
             }
             if (IPS_GetInstance($voIP)['ModuleInfo']['ModuleID'] != '{A4224A63-49EA-445F-8422-22EF99D8F624}') {
                 return 203;
+            }
+            if (count(json_decode($this->ReadPropertyString('PhoneNumbers'), true)) == 0) {
+                return 104;
             }
 
             //Everything ok
