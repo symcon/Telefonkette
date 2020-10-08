@@ -49,9 +49,9 @@ class TelefonketteBaseTest extends TestCase
                             'PhoneNumber' => '333333'
                         ]
                     ]),
-                'MaxSyncCallCount' => 2,
-                'CallDuraion'      => 15,
-                'ConfirmKey'       => '1'
+                'MaxSyncCallCount'  => 2,
+                'CallDuration'      => 15,
+                'ConfirmKey'        => '1'
             ]
                         );
         IPS_SetConfiguration($this->TelefonketteID, $configuration);
@@ -204,7 +204,8 @@ class TelefonketteBaseTest extends TestCase
                 [
                     'PhoneNumber' => '111111'
                 ]
-            ]));
+            ]
+        ));
         IPS_SetProperty($instanceID, 'MaxSyncCallCount', 3);
         IPS_ApplyChanges($instanceID);
         TK_UpdateCalls($instanceID);

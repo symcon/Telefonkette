@@ -45,10 +45,10 @@ class TelefonketteConfigurationTest extends TestCase
                 'VoIP'             => $this->VoIPID,
                 'PhoneNumbers'     => json_encode([]),
                 'MaxSyncCallCount' => 2,
-                'CallDuraion'      => 15,
+                'CallDuration'     => 15,
                 'ConfirmKey'       => '1'
             ]
-                        );
+        );
         IPS_SetConfiguration($instanceID, $configuration);
         IPS_ApplyChanges($instanceID);
         $status = IPS\InstanceManager::getInstance($instanceID)['InstanceStatus'];
@@ -62,20 +62,21 @@ class TelefonketteConfigurationTest extends TestCase
         $instanceID = $this->TelefonketteID;
         $configuration = json_encode(
             [
-                'Trigger'      => $this->TriggerID,
-                'VoIP'         => 0,
-                'PhoneNumbers' => json_encode([[
-                    'PhoneNumber' => '111111'
-                ],
-                [
-                    'PhoneNumber' => '222222'
-                ]]
-                ),
+                'Trigger'          => $this->TriggerID,
+                'VoIP'             => 0,
                 'MaxSyncCallCount' => 2,
-                'CallDuraion'      => 15,
-                'ConfirmKey'       => '1'
+                'CallDuration'     => 15,
+                'ConfirmKey'       => '1',
+                'PhoneNumbers'     => json_encode([
+                    [
+                        'PhoneNumber' => '111111'
+                    ],
+                    [
+                        'PhoneNumber' => '222222'
+                    ]
+                ]),
             ]
-                        );
+        );
         IPS_SetConfiguration($instanceID, $configuration);
         IPS_ApplyChanges($instanceID);
         $status = IPS\InstanceManager::getInstance($instanceID)['InstanceStatus'];
