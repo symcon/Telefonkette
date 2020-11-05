@@ -39,7 +39,7 @@ Name                         | Beschreibung
 ---------------------------- | ------------------
 Auslöser                     | Bool Variable die als Auslöser dient
 VoIP Instanz                 | VoIP Instanz, welche für die Anrufe genutzt werden soll
-Telefonnummern               | Liste und Reihenfolge der Nummern, elche angerufen werden sollen
+Telefonnummern               | Liste und Reihenfolge der Nummern mit Beschreibung, welche angerufen werden sollen
 Anzahl gleichzeitiger Anrufe | Anzahl der Anrufe, welche parallel gemacht werden
 Anrufdauer                   | Zeit in Sekunden, welche auf ein Annehmen des Anrufes gewartet wird
 DTMF Bestätigungstaste       | Taste, mit der ein Anruf bestätigt wird
