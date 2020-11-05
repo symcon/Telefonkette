@@ -21,11 +21,20 @@
                 {
                     "name": "PhoneNumber",
                     "caption": "Phone Number",
-                    "width": "auto",
+                    "width": "200px",
                     "add": 0,
                     "edit": {
                         "type": "ValidationTextBox",
                         "validate": "^\\+?[0-9]*$"
+                    }
+                },
+                {
+                    "name": "Description",
+                    "caption": "Description",
+                    "width": "auto",
+                    "add": "",
+                    "edit": {
+                        "type": "ValidationTextBox"
                     }
                 }
             ]

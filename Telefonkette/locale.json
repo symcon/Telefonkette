@@ -27,7 +27,8 @@
             "Confirmed": "Bestätigt",
             "Ready": "Bereit",
             "List Position %d": "Listenposition %d",
-            "Reset Status": "Status zurücksetzen"
+            "Reset Status": "Status zurücksetzen",
+            "Description": "Beschreibung"
         }
     }
 }
