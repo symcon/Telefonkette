@@ -194,7 +194,7 @@ class Telefonkette extends IPSModule
         return json_encode($form);
     }
 
-    public function ToggleInterval($visible)
+    public function ToggleInterval(bool $visible)
     {
         $this->UpdateFormField('ResetInterval', 'visible', $visible);
     }
