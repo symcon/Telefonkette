@@ -19,7 +19,7 @@ Das Telefonkette-Modul ermöglicht es eine Liste von Telefonnummern nacheinander
 * Dauer bis ein Anruf beendet wird frei wählbar
 * Bool Variable als Auslöser
 
-### 2. Vorraussetzungen
+### 2. Voraussetzungen
 
 - IP-Symcon ab Version 5.5
 
