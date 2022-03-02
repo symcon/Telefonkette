@@ -22,6 +22,7 @@ Das Telefonkette-Modul ermöglicht es eine Liste von Telefonnummern nacheinander
 ### 2. Voraussetzungen
 
 - IP-Symcon ab Version 5.5
+- Eigenes VoIP Abarbeitungsskript für die Audio-Ansage
 
 ### 3. Software-Installation
 
