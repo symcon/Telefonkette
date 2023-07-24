@@ -22,6 +22,10 @@ class Telefonkette extends IPSModule
         //Properties
         $this->RegisterPropertyInteger('Trigger', 0);
         $this->RegisterPropertyInteger('VoIP', 0);
+        $this->RegisterPropertyInteger('TTS', 0);
+        $this->RegisterPropertyBoolean('OutputOption', false);
+        $this->RegisterPropertyString('StaticOutput', '');
+        $this->RegisterPropertyInteger('VariableOutput', 0);
         $this->RegisterPropertyString('PhoneNumbers', '[]');
         $this->RegisterPropertyInteger('MaxSyncCallCount', 2);
         $this->RegisterPropertyInteger('CallDuration', 15);
@@ -136,6 +140,12 @@ class Telefonkette extends IPSModule
             }
     }
 
+    public function UISetVisible(bool $value)
+    {
+        $this->UpdateFormField('StaticOutput', 'visible', !$value);
+        $this->UpdateFormField('VariableOutput', 'visible', $value);
+    }
+
     public function UpdateCalls()
     {
         if ($this->GetStatus() != 102) {
@@ -143,18 +153,20 @@ class Telefonkette extends IPSModule
         }
         //Check if remaining calls exceed the time limit
         $activeCalls = json_decode($this->GetBuffer('ActiveCalls'), true);
+        $voipID = $this->ReadPropertyInteger('VoIP');
         foreach ($activeCalls as $activeCallID => $activeCallTime) {
-            $call = VoIP_GetConnection($this->ReadPropertyInteger('VoIP'), $activeCallID);
+            $call = VoIP_GetConnection($voipID, $activeCallID);
             $this->SendDebug('Telefonkette', sprintf($this->Translate('Time: %s | Call Time: %s'), date('H:i:s d.m.Y', $this->GetTime()), date('H:i:s d.m.Y', $activeCallTime)), 0);
             //If the call is answered don't end it
             if ($call['Connected']) {
+                $this->playTTS($voipID, $call);
                 $this->SendDebug($call['Number'], 'Connected', 0);
                 continue;
             }
 
             //End calls which exceed the time limit
             if (($this->getTime() - $activeCallTime) > $this->ReadPropertyInteger('CallDuration')) {
-                VoIP_Disconnect($this->ReadPropertyInteger('VoIP'), $activeCallID);
+                VoIP_Disconnect($voipID, $activeCallID);
                 unset($activeCalls[$activeCallID]);
                 $this->SendDebug('ActiveCalls', json_encode($activeCalls), 0);
             }
@@ -164,7 +176,7 @@ class Telefonkette extends IPSModule
         $phoneNumbers = json_decode($this->ReadPropertyString('PhoneNumbers'), true);
         $listPosition = json_decode($this->GetBuffer('ListPosition'));
         if ((count($activeCalls) < $this->ReadPropertyInteger('MaxSyncCallCount')) && ($listPosition < count($phoneNumbers))) {
-            $call = VoIP_Connect($this->ReadPropertyInteger('VoIP'), $phoneNumbers[$listPosition]['PhoneNumber']);
+            $call = VoIP_Connect($voipID, $phoneNumbers[$listPosition]['PhoneNumber']);
             $this->SetValue('Status', $listPosition + 1);
             $this->SendDebug('New Call', json_encode($call), 0);
             $this->SetBuffer('ListPosition', json_encode($listPosition + 1));
@@ -190,7 +202,9 @@ class Telefonkette extends IPSModule
     public function GetConfigurationForm()
     {
         $form = json_decode(file_get_contents(__DIR__ . '/form.json'), true);
-        $form['elements'][7]['visible'] = $this->ReadPropertyBoolean('ResetStatus');
+        $form['elements'][9]['visible'] = $this->ReadPropertyBoolean('ResetStatus');
+        $form['elements'][3]['items'][1]['visible'] = !$this->ReadPropertyBoolean('OutputOption');
+        $form['elements'][3]['items'][2]['visible'] = $this->ReadPropertyBoolean('OutputOption');
         return json_encode($form);
     }
 
@@ -198,6 +212,37 @@ class Telefonkette extends IPSModule
     {
         $this->UpdateFormField('ResetInterval', 'visible', $visible);
     }
+
+    private function playTTS($voipID, $voipConnection)
+    {
+        $ttsID = $this->ReadPropertyInteger('TTS');
+        if(!IPS_InstanceExists($ttsID)){
+            return;
+        }
+
+        switch ($this->ReadPropertyString('OutputOption')) {
+            case 'StaticOutput':
+                $output = $this->ReadPropertyString('StaticOutput');
+                if($output !== ""){
+                    $file = TTSAWSPOLLY_GenerateFile($ttsID, $output);
+                }
+                break;
+            case 'VariableOutput':
+                $outputID = $this->ReadPropertyInteger('VariableOutput');
+                if(IPS_VariableExists($outputID)){
+                    $file = TTSAWSPOLLY_GenerateFile($ttsID, GetValue($outputID));
+                }
+                break;
+            default:
+                $this->SendDebug('ERROR', 'OutputOption is not supported');
+                return;
+        }
+
+        if(isset($file)){
+            VOIP_PlayWave($voipID, $voipConnection['ID'], $file);
+        }
+    }
+
     private function setErrorState()
     {
         $getInstanceStatus = function ()
