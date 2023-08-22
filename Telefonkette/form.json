@@ -26,8 +26,14 @@
                     "caption": "TTS Type",
                     "onChange": "TK_UISetVisible($id, $TTSType);",
                     "options": [
-                        { "caption": "Static", "value": "Static" },
-                        { "caption": "Dynamic", "value": "Dynamic" }
+                        {
+                            "caption": "Static",
+                            "value": "Static"
+                        },
+                        {
+                            "caption": "Dynamic",
+                            "value": "Dynamic"
+                        }
                     ]
                 },
                 {

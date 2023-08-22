@@ -146,8 +146,8 @@ class Telefonkette extends IPSModule
 
     public function UISetVisible(string $ttsType)
     {
-        $this->UpdateFormField('TTSStaticText', 'visible', $ttsType == "Static");
-        $this->UpdateFormField('TTSDynamicVariable', 'visible', $ttsType == "Dynamic");
+        $this->UpdateFormField('TTSStaticText', 'visible', $ttsType == 'Static');
+        $this->UpdateFormField('TTSDynamicVariable', 'visible', $ttsType == 'Dynamic');
     }
 
     public function UpdateCalls()
@@ -207,8 +207,8 @@ class Telefonkette extends IPSModule
     {
         $form = json_decode(file_get_contents(__DIR__ . '/form.json'), true);
         $form['elements'][9]['visible'] = $this->ReadPropertyBoolean('ResetStatus');
-        $form['elements'][3]['items'][1]['visible'] = $this->ReadPropertyString('TTSType') == "Static";
-        $form['elements'][3]['items'][2]['visible'] = $this->ReadPropertyString('TTSType') == "Dynamic";
+        $form['elements'][3]['items'][1]['visible'] = $this->ReadPropertyString('TTSType') == 'Static';
+        $form['elements'][3]['items'][2]['visible'] = $this->ReadPropertyString('TTSType') == 'Dynamic';
         return json_encode($form);
     }
 
@@ -220,21 +220,21 @@ class Telefonkette extends IPSModule
     private function playTTS($connectionID)
     {
         $ttsID = $this->ReadPropertyInteger('TTS');
-        if(!IPS_InstanceExists($ttsID)){
-            $this->SendDebug("PlayTTS is missing instance", "", 0);
+        if (!IPS_InstanceExists($ttsID)) {
+            $this->SendDebug('PlayTTS is missing instance', '', 0);
             return;
         }
 
         switch ($this->ReadPropertyString('TTSType')) {
             case 'Static':
                 $text = $this->ReadPropertyString('TTSStaticText');
-                if($text !== ""){
+                if ($text !== '') {
                     $file = TTSAWSPOLLY_GenerateFile($ttsID, $text);
                 }
                 break;
             case 'Dynamic':
                 $variableID = $this->ReadPropertyInteger('TTSDynamicVariable');
-                if(IPS_VariableExists($variableID)){
+                if (IPS_VariableExists($variableID)) {
                     $file = TTSAWSPOLLY_GenerateFile($ttsID, GetValue($variableID));
                 }
                 break;
@@ -243,8 +243,8 @@ class Telefonkette extends IPSModule
                 return;
         }
 
-        if(isset($file)){
-            $this->SendDebug("Playing...", $file, 0);
+        if (isset($file)) {
+            $this->SendDebug('Playing...', $file, 0);
             // Eine kleine Verzögerung einbauen, damit derjenige reagieren kann!
             IPS_Sleep(250);
             VOIP_PlayWave($this->ReadPropertyInteger('VoIP'), $connectionID, $file);
