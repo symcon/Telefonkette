@@ -58,20 +58,32 @@ class TelefonketteBaseTest extends TestCase
         IPS_ApplyChanges($this->TelefonketteID);
         TK_setTime($this->TelefonketteID, strtotime('September 1 2020 13:00:00'));
 
+        IPS_EnableDebug($this->TelefonketteID, 5000);
+
         parent::setUp();
+    }
+
+    public function array_count_bool_values($column, $value): int
+    {
+        $array = array_column(VOIP_StubsGetConnections($this->VoIPID), $column);
+        return count(array_filter($array, function ($v) use ($value)
+        {
+            return $v == $value;
+        }));
     }
 
     public function testCallNoAnswer()
     {
-        //Call untill one number moves up
+        //Call until one number moves up
         $instanceID = $this->TelefonketteID;
         TK_UpdateCalls($instanceID);
         TK_setTime($instanceID, strtotime('September 1 2020 13:00:10'));
         TK_UpdateCalls($instanceID);
         TK_setTime($instanceID, strtotime('September 1 2020 13:00:16'));
         TK_UpdateCalls($instanceID);
+        $this->assertEquals($this->array_count_bool_values('Disconnected', false), 2);
+        $this->assertEquals($this->array_count_bool_values('Disconnected', true), 1);
         $activeConnections = VOIP_StubsGetConnections($this->VoIPID);
-        $this->assertEquals(count($activeConnections), 2);
         $this->assertEquals($activeConnections[1]['Number'], '222222');
         $this->assertEquals($activeConnections[2]['Number'], '333333');
     }
@@ -83,14 +95,18 @@ class TelefonketteBaseTest extends TestCase
         TK_UpdateCalls($instanceID);
         TK_UpdateCalls($instanceID);
         TK_UpdateCalls($instanceID);
+
+        $this->assertEquals($this->array_count_bool_values('Disconnected', false), 2);
+        $this->assertEquals($this->array_count_bool_values('Disconnected', true), 0);
         $activeConnections = VOIP_StubsGetConnections($this->VoIPID);
-        $this->assertEquals(count($activeConnections), 2);
         $this->assertEquals($activeConnections[0]['Number'], '111111');
         $this->assertEquals($activeConnections[1]['Number'], '222222');
+
         IPS\InstanceManager::getInstanceInterface($instanceID)->MessageSink(0, $this->VoIPID, 21000, [0, 'DTMF', '1']);
         $this->assertEquals('111111', GetValue(IPS_GetObjectIDByIdent('ConfirmNumber', $instanceID)));
         $this->assertEquals(-1, GetValue(IPS_GetObjectIDByIdent('Status', $instanceID)));
-        $this->assertEquals(count(VOIP_StubsGetConnections($this->VoIPID)), 0);
+        $this->assertEquals($this->array_count_bool_values('Disconnected', false), 0);
+        $this->assertEquals($this->array_count_bool_values('Disconnected', true), 2);
     }
 
     public function testCallAnswerKeep()
@@ -103,8 +119,9 @@ class TelefonketteBaseTest extends TestCase
         VoIP_StubsAnswerOutgoingCall($this->VoIPID, 0);
         TK_setTime($instanceID, strtotime('September 1 2020 13:00:30'));
         TK_UpdateCalls($instanceID);
+        $this->assertEquals($this->array_count_bool_values('Disconnected', true), 1);
+        $this->assertEquals($this->array_count_bool_values('Connected', true), 1);
         $activeConnections = VOIP_StubsGetConnections($this->VoIPID);
-        $this->assertEquals(count($activeConnections), 2);
         $this->assertEquals($activeConnections[0]['Number'], '111111');
         $this->assertTrue($activeConnections[0]['Connected']);
         $this->assertEquals($activeConnections[2]['Number'], '333333');
@@ -125,10 +142,10 @@ class TelefonketteBaseTest extends TestCase
         IPS\InstanceManager::getInstanceInterface($instanceID)->MessageSink(0, $this->VoIPID, 21000, [0, 'DTMF', '1']);
         $this->assertEquals('111111', GetValue(IPS_GetObjectIDByIdent('ConfirmNumber', $instanceID)));
         $this->assertEquals(-1, GetValue(IPS_GetObjectIDByIdent('Status', $instanceID)));
-        $this->assertEquals(count(VOIP_StubsGetConnections($this->VoIPID)), 0);
+        $this->assertEquals($this->array_count_bool_values('Disconnected', false), 0);
         IPS\InstanceManager::getInstanceInterface($instanceID)->MessageSink(0, $this->TriggerID, VM_UPDATE, [true]);
         $this->assertEquals(-1, GetValue(IPS_GetObjectIDByIdent('Status', $instanceID)));
-        $this->assertEquals(count(VOIP_StubsGetConnections($this->VoIPID)), 0);
+        $this->assertEquals($this->array_count_bool_values('Disconnected', false), 0);
     }
 
     public function testCallAnswerDisconnect()
@@ -147,7 +164,8 @@ class TelefonketteBaseTest extends TestCase
         $this->assertTrue(VOIP_StubsGetConnections($this->VoIPID)[0]['Connected']);
         VoIP_StubsRejectOutgoingCall($this->VoIPID, 0);
         TK_UpdateCalls($instanceID);
-        $this->assertEquals(1, count(VOIP_StubsGetConnections($this->VoIPID)));
+        $this->assertEquals($this->array_count_bool_values('Disconnected', false), 1);
+
         $this->assertEquals('222222', VOIP_StubsGetConnections($this->VoIPID)[1]['Number']);
     }
 
@@ -176,17 +194,21 @@ class TelefonketteBaseTest extends TestCase
         $this->assertEquals(count($activeConnections), 2);
         $this->assertEquals($activeConnections[0]['Number'], '111111');
         $this->assertEquals($activeConnections[1]['Number'], '222222');
+
         IPS\InstanceManager::getInstanceInterface($instanceID)->MessageSink(0, $this->VoIPID, 21000, [0, 'DTMF', '1']);
         $this->assertEquals('111111', GetValue(IPS_GetObjectIDByIdent('ConfirmNumber', $instanceID)));
         $this->assertEquals(-1, GetValue(IPS_GetObjectIDByIdent('Status', $instanceID)));
-        $this->assertEquals(count(VOIP_StubsGetConnections($this->VoIPID)), 0);
+        $this->assertEquals($this->array_count_bool_values('Disconnected', true), 2);
+
         IPS\InstanceManager::getInstanceInterface($instanceID)->MessageSink(0, $this->TriggerID, VM_UPDATE, [true]);
         $this->assertEquals(-1, GetValue(IPS_GetObjectIDByIdent('Status', $instanceID)));
-        $this->assertEquals(count(VOIP_StubsGetConnections($this->VoIPID)), 0);
+        $this->assertEquals($this->array_count_bool_values('Disconnected', false), 0);
         TK_ResetStatus($instanceID);
         $this->assertEquals(0, GetValue(IPS_GetObjectIDByIdent('Status', $instanceID)));
+
         IPS\InstanceManager::getInstanceInterface($instanceID)->MessageSink(0, $this->TriggerID, VM_UPDATE, [true]);
-        $this->assertEquals(count(VOIP_StubsGetConnections($this->VoIPID)), 1);
+        $this->assertEquals(count(VOIP_StubsGetConnections($this->VoIPID)), 3);
+        $this->assertEquals($this->array_count_bool_values('Disconnected', false), 1);
     }
 
     public function testCallSameNumber()
@@ -236,7 +258,7 @@ class TelefonketteBaseTest extends TestCase
         $this->assertEquals(2, count(VOIP_StubsGetConnections($this->VoIPID)));
         IPS\InstanceManager::getInstanceInterface($instanceID)->MessageSink(0, $this->VoIPID, 21000, [0, 'DTMF', '1']);
         $activeConnections = VOIP_StubsGetConnections($this->VoIPID);
-        $this->assertEquals(1, count($activeConnections));
+        $this->assertEquals($this->array_count_bool_values('Disconnected', false), 1);
         $this->assertEquals($foreignCall, $activeConnections[$foreignCall]['ID']);
     }
 

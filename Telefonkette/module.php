@@ -108,9 +108,11 @@ class Telefonkette extends IPSModule
                             case $this->ReadPropertyString('ConfirmKey'):
                                 $this->SetValue('ConfirmNumber', VoIP_GetConnection($this->ReadPropertyInteger('VoIP'), $Data[0])['Number']);
                                 $this->SetValue('Status', self::CONFIRMED);
-                                VoIP_Disconnect($this->ReadPropertyInteger('VoIP'), $Data[0]);
-                                //If confirmed end all remaining calls
+
                                 $activeCalls = json_decode($this->GetBuffer('ActiveCalls'), true);
+                                VoIP_Disconnect($this->ReadPropertyInteger('VoIP'), $Data[0]);
+
+                                //If confirmed end all remaining calls
                                 $this->SendDebug('ActiveCalls', json_encode($activeCalls), 0);
                                 foreach ($activeCalls as $activeCallID => $activeCallTime) {
                                     VoIP_Disconnect($this->ReadPropertyInteger('VoIP'), $activeCallID);
@@ -166,7 +168,7 @@ class Telefonkette extends IPSModule
 
             //End calls which exceed the time limit
             if (($this->getTime() - $activeCallTime) > $this->ReadPropertyInteger('CallDuration')) {
-                if ($call['Connected']) {
+                if (!$call['Disconnected']) {
                     VoIP_Disconnect($this->ReadPropertyInteger('VoIP'), $activeCallID);
                 }
                 unset($activeCalls[$activeCallID]);
