@@ -3,6 +3,10 @@
         "de": {
             "Trigger": "Auslöser",
             "VoIP Instance": "VoIP Instanz",
+            "TTS Instance": "TTS Instanz",
+            "TTS Type": "TTS Typ",
+            "Static": "Statisch",
+            "Dynamic": "Dynamisch",
             "Phone Numbers": "Telefonnummern",
             "Phone Number": " Telefonnummer",
             "Number of Simultaneous Calls": "Anzahl gleichzeitiger Anrufe",

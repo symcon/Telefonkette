@@ -14,6 +14,7 @@ Das Telefonkette-Modul ermöglicht es eine Liste von Telefonnummern nacheinander
 ### 1. Funktionsumfang
 
 * Eine Liste von Telefonnummern kann absteigend angerufen werden
+* Bei Annahme kann eine TTS-Datei abgespielt werden
 * Weitere Anrufe werden beendet, wenn ein Angerufener durch ein DTMF-Zeichen bestätigt
 * DTMF-Zeichen frei wählbar
 * Dauer bis ein Anruf beendet wird frei wählbar
@@ -22,7 +23,7 @@ Das Telefonkette-Modul ermöglicht es eine Liste von Telefonnummern nacheinander
 ### 2. Voraussetzungen
 
 - IP-Symcon ab Version 5.5
-- Eigenes VoIP Abarbeitungsskript für die Audio-Ansage
+- Eigenes VoIP Abarbeitungsskript für die Audio-Ansage oder eine eingerichtete TTSAWSPOLLY-Instanz
 
 ### 3. Software-Installation
 
@@ -40,6 +41,8 @@ Name                         | Beschreibung
 ---------------------------- | ------------------
 Auslöser                     | Bool Variable die als Auslöser dient
 VoIP Instanz                 | VoIP Instanz, welche für die Anrufe genutzt werden soll
+TTS Instanz                  | TTSAWSPOLLY Instanz, welche für die Ansage genutzt werden soll
+TTS Type                     | __Statisch__ , Statischer Text für eine Ansage oder dynamische Ansage über eine String-Variable 
 Telefonnummern               | Liste und Reihenfolge der Nummern mit Beschreibung, welche angerufen werden sollen
 Anzahl gleichzeitiger Anrufe | Anzahl der Anrufe, welche parallel gemacht werden
 Anrufdauer                   | Zeit in Sekunden, welche auf ein Annehmen des Anrufes gewartet wird
