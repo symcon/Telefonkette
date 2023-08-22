@@ -21,23 +21,27 @@
             "type": "RowLayout",
             "items": [
                 {
-                    "type": "CheckBox",
-                    "name": "OutputOption",
-                    "caption": "Variable Audio Output",
-                    "onChange": "TK_UISetVisible($id, $OutputOption);"
+                    "type": "Select",
+                    "name": "TTSType",
+                    "caption": "TTS Type",
+                    "onChange": "TK_UISetVisible($id, $TTSType);",
+                    "options": [
+                        { "caption": "Static", "value": "Static" },
+                        { "caption": "Dynamic", "value": "Dynamic" }
+                    ]
                 },
                 {
                     "type": "ValidationTextBox",
-                    "name": "StaticOutput",
-                    "caption": "Static Output"
+                    "name": "TTSStaticText",
+                    "caption": "Text"
                 },
                 {
                     "type": "SelectVariable",
                     "validVariableType": [
                         3
                     ],
-                    "caption": "Variable Output",
-                    "name": "VariableOutput",
+                    "caption": "Variable",
+                    "name": "TTSDynamicVariable",
                     "visible": false
                 }
             ]
