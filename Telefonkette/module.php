@@ -109,10 +109,8 @@ class Telefonkette extends IPSModule
                                 $this->SetValue('ConfirmNumber', VoIP_GetConnection($this->ReadPropertyInteger('VoIP'), $Data[0])['Number']);
                                 $this->SetValue('Status', self::CONFIRMED);
 
-                                $activeCalls = json_decode($this->GetBuffer('ActiveCalls'), true);
-                                VoIP_Disconnect($this->ReadPropertyInteger('VoIP'), $Data[0]);
-
                                 //If confirmed end all remaining calls
+                                $activeCalls = json_decode($this->GetBuffer('ActiveCalls'), true);
                                 $this->SendDebug('ActiveCalls', json_encode($activeCalls), 0);
                                 foreach ($activeCalls as $activeCallID => $activeCallTime) {
                                     VoIP_Disconnect($this->ReadPropertyInteger('VoIP'), $activeCallID);
