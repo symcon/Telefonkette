@@ -6,5 +6,5 @@
 
 Folgende Module beinhaltet das Telefonkette Repository:
 
-- __Telefonkette__ ([Dokumentation](Telefonkette))  
+- __Telefonkette__ ([Dokumentation](https://www.symcon.de/de/service/dokumentation/modulreferenz/telefonkette))  
 	Das Telefonkette-Modul ermöglicht es eine Liste von Telefonnummern nacheinander anzurufen.
