@@ -12,6 +12,47 @@
             "moduleID": "{A4224A63-49EA-445F-8422-22EF99D8F624}"
         },
         {
+            "type": "SelectModule",
+            "caption": "TTS Instance",
+            "moduleID": "{6EFA02E1-360F-4120-B3DE-31EFCDAF0BAF}",
+            "name": "TTS"
+        },
+        {
+            "type": "RowLayout",
+            "items": [
+                {
+                    "type": "Select",
+                    "name": "TTSType",
+                    "caption": "TTS Type",
+                    "onChange": "TK_UISetVisible($id, $TTSType);",
+                    "options": [
+                        {
+                            "caption": "Static",
+                            "value": "Static"
+                        },
+                        {
+                            "caption": "Dynamic",
+                            "value": "Dynamic"
+                        }
+                    ]
+                },
+                {
+                    "type": "ValidationTextBox",
+                    "name": "TTSStaticText",
+                    "caption": "Text"
+                },
+                {
+                    "type": "SelectVariable",
+                    "validVariableType": [
+                        3
+                    ],
+                    "caption": "Variable",
+                    "name": "TTSDynamicVariable",
+                    "visible": false
+                }
+            ]
+        },
+        {
             "type": "List",
             "name": "PhoneNumbers",
             "caption": "Phone Numbers",
@@ -56,7 +97,7 @@
             "type": "ValidationTextBox",
             "name": "ConfirmKey",
             "caption": "DTMF Confirmation Key",
-            "validate": "^[0-9#*]$" 
+            "validate": "^[0-9#*]$"
         },
         {
             "type": "CheckBox",
@@ -69,14 +110,29 @@
             "name": "ResetInterval",
             "caption": "Reset Interval",
             "suffix": "Minutes",
-            "minimum": 1 
+            "minimum": 1
         }
-        
     ],
     "status": [
-        {"code": 200, "caption": "Trigger variable doesn't exist", "icon": "error"},
-        {"code": 201, "caption": "Trigger variable must be of type boolean", "icon": "error"},
-        {"code": 202, "caption": "Selected VoIP instance doesn't exist", "icon": "error"},
-        {"code": 203, "caption": "Selected insatnce is no VoIP instance", "icon": "error"}
+        {
+            "code": 200,
+            "caption": "Trigger variable doesn't exist",
+            "icon": "error"
+        },
+        {
+            "code": 201,
+            "caption": "Trigger variable must be of type boolean",
+            "icon": "error"
+        },
+        {
+            "code": 202,
+            "caption": "Selected VoIP instance doesn't exist",
+            "icon": "error"
+        },
+        {
+            "code": 203,
+            "caption": "Selected insatnce is no VoIP instance",
+            "icon": "error"
+        }
     ]
 }
