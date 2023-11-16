@@ -48,12 +48,13 @@ class TelefonketteBaseTest extends TestCase
                         [
                             'PhoneNumber' => '333333'
                         ]
-                    ]),
+                    ]
+                ),
                 'MaxSyncCallCount'  => 2,
                 'CallDuration'      => 15,
                 'ConfirmKey'        => '1'
             ]
-                        );
+        );
         IPS_SetConfiguration($this->TelefonketteID, $configuration);
         IPS_ApplyChanges($this->TelefonketteID);
         TK_setTime($this->TelefonketteID, strtotime('September 1 2020 13:00:00'));
