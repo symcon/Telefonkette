@@ -7,9 +7,9 @@ class Telefonkette extends IPSModule
 {
     use TestTime;
 
-    const VOIP_EVENT = 21000;
-    const WAITING = 0;
-    const CONFIRMED = -1;
+    public const VOIP_EVENT = 21000;
+    public const WAITING = 0;
+    public const CONFIRMED = -1;
     public function Create()
     {
         //Never delete this line!
@@ -125,8 +125,8 @@ class Telefonkette extends IPSModule
                             default:
                                 $this->SendDebug('Telefonkette', 'DTMF signal does not match the confirm key!', 0);
                                 break;
-                            }
-                            break;
+                        }
+                        break;
                     case 'Connect':
                         $this->SendDebug('VoIP', 'Connected', 0);
                         $this->playTTS($Data[0]);
@@ -139,7 +139,7 @@ class Telefonkette extends IPSModule
 
             default:
                 break;
-            }
+        }
     }
 
     public function UISetVisible(string $ttsType)
