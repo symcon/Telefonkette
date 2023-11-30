@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 include_once __DIR__ . '/timeTrait.php';
-class Telefonkette extends IPSModule
+class PhoneChain extends IPSModule
 {
     use TestTime;
 
@@ -123,7 +123,7 @@ class Telefonkette extends IPSModule
                                 break;
 
                             default:
-                                $this->SendDebug('Telefonkette', 'DTMF signal does not match the confirm key!', 0);
+                                $this->SendDebug('PhoneChain', 'DTMF signal does not match the confirm key!', 0);
                                 break;
                         }
                         break;
@@ -132,7 +132,7 @@ class Telefonkette extends IPSModule
                         $this->playTTS($Data[0]);
                         break;
                     default:
-                        $this->SendDebug('Telefonkette', sprintf('Unprocessed VoIP event: %s', $Data[1]), 0);
+                        $this->SendDebug('PhoneChain', sprintf('Unprocessed VoIP event: %s', $Data[1]), 0);
                         break;
                 }
                 break;
@@ -157,7 +157,7 @@ class Telefonkette extends IPSModule
         $activeCalls = json_decode($this->GetBuffer('ActiveCalls'), true);
         foreach ($activeCalls as $activeCallID => $activeCallTime) {
             $call = VoIP_GetConnection($this->ReadPropertyInteger('VoIP'), $activeCallID);
-            $this->SendDebug('Telefonkette', sprintf('Time: %s | Call Time: %s', date('H:i:s d.m.Y', $this->GetTime()), date('H:i:s d.m.Y', $activeCallTime)), 0);
+            $this->SendDebug('PhoneChain', sprintf('Time: %s | Call Time: %s', date('H:i:s d.m.Y', $this->GetTime()), date('H:i:s d.m.Y', $activeCallTime)), 0);
             //If the call is answered don't end it
             if ($call['Connected']) {
                 $this->SendDebug($call['Number'], 'Connected', 0);
@@ -190,7 +190,7 @@ class Telefonkette extends IPSModule
             $this->SetValue('ConfirmNumber', $this->Translate('No one was reached'));
             $this->SetValue('Status', self::WAITING);
             $this->reset();
-            $this->SendDebug('Telefonkette', 'No one was reached', 0);
+            $this->SendDebug('PhoneChain', 'No one was reached', 0);
         }
         $this->SetBuffer('ActiveCalls', json_encode($activeCalls));
     }

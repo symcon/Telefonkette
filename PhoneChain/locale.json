@@ -27,7 +27,9 @@
             "Ready": "Bereit",
             "List Position %d": "Listenposition %d",
             "Reset Status": "Status zurücksetzen",
-            "Description": "Beschreibung"
+            "Description": "Beschreibung",
+            "https://www.symcon.de/en/service/documentation/module-reference/phone-chain/": "https://www.symcon.de/de/service/dokumentation/modulreferenz/telefonansage/",
+            "Phone Chain": "Telefonkette"
         }
     }
 }

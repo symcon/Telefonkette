@@ -1,6 +1,6 @@
 {
     "id": "{58F82675-99C8-5CA1-8333-68CDAD6EBE6E}",
-    "name": "Telefonkette",
+    "name": "Phone Chain",
     "type": 3,
     "vendor": "",
     "aliases": [],
@@ -8,5 +8,5 @@
     "childRequirements": [],
     "implemented": [],
     "prefix": "TK",
-    "url": "https://github.com/symcon/Telefonkette"
+    "url": "https://www.symcon.de/en/service/documentation/module-reference/phone-chain/"
 }

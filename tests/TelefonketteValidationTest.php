@@ -11,8 +11,8 @@ class TelefonketteValidationTest extends TestCaseSymconValidation
         $this->validateLibrary(__DIR__ . '/..');
     }
 
-    public function testValidateTelefonketteModule(): void
+    public function testValidatePhoneChainModule(): void
     {
-        $this->validateModule(__DIR__ . '/../Telefonkette');
+        $this->validateModule(__DIR__ . '/../PhoneChain');
     }
 }
