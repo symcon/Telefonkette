@@ -6,7 +6,7 @@
   </php>
   <source>
     <include>
-      <directory suffix=".php">../Telefonkette</directory>
+      <directory suffix=".php">../PhoneChain</directory>
     </include>
   </source>
 </phpunit>

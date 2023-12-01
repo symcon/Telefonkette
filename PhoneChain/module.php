@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 include_once __DIR__ . '/timeTrait.php';
-class Telefonkette extends IPSModule
+class PhoneChain extends IPSModule
 {
     use TestTime;
 
