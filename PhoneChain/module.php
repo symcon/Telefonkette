@@ -106,6 +106,8 @@ class PhoneChain extends IPSModule
                         $this->SendDebug('VoIP', sprintf("DTMF signal '%s' was received", $Data[2]), 0);
                         switch ($Data[2]) {
                             case $this->ReadPropertyString('ConfirmKey'):
+                                // When logging this variable we need to change the number to empty to properly log the same number multiple times
+                                $this->SetValue('ConfirmNumber', '');
                                 $this->SetValue('ConfirmNumber', VoIP_GetConnection($this->ReadPropertyInteger('VoIP'), $Data[0])['Number']);
                                 $this->SetValue('Status', self::CONFIRMED);
 
@@ -187,6 +189,8 @@ class PhoneChain extends IPSModule
         }
         //Cancel if no one was reached
         elseif ((count($activeCalls) == 0) && ($listPosition == count($phoneNumbers))) {
+            // When logging this variable we need to change the number to empty to properly log the same number multiple times
+            $this->SetValue('ConfirmNumber', '');
             $this->SetValue('ConfirmNumber', $this->Translate('No one was reached'));
             $this->SetValue('Status', self::WAITING);
             $this->reset();
