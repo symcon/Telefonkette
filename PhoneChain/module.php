@@ -26,6 +26,7 @@ class PhoneChain extends IPSModule
         $this->RegisterPropertyString('TTSType', 'Static');
         $this->RegisterPropertyString('TTSStaticText', '');
         $this->RegisterPropertyInteger('TTSDynamicVariable', 0);
+        $this->RegisterPropertyBoolean('EditableVisu', false);
         $this->RegisterPropertyString('PhoneNumbers', '[]');
         $this->RegisterPropertyInteger('MaxSyncCallCount', 2);
         $this->RegisterPropertyInteger('CallDuration', 15);
@@ -66,6 +67,45 @@ class PhoneChain extends IPSModule
 
         $this->SetBuffer('ActiveCalls', '[]');
         $this->SetBuffer('ListPosition', '0');
+
+        //Create the variables if the feature is true
+        if ($this->ReadPropertyBoolean('EditableVisu')) {
+            $needsReload = false;
+            $phoneNumbers = json_decode($this->ReadPropertyString('PhoneNumbers'), true);
+            //Create the variable
+            foreach ($phoneNumbers as $key => $number) {
+                $ident = key_exists("VariableIdent", $number) ? $number['VariableIdent'] : "Position_".$key;
+                if (!@$this->GetIDForIdent($ident)) {
+                    $this->MaintainVariable($ident, $number['Description'] !== '' ? $number['Description'] : 'Phone Number' . $key, 0, '', $key, true);
+                    $this->EnableAction($ident);
+                    $id = $this->GetIDForIdent($ident);
+                    $this->RegisterReference($id);
+                    $needsReload = true;
+                }
+                $phoneNumbers[$key]['VariableIdent'] = $ident;
+            }
+            if ($needsReload) {
+                IPS_SetProperty($this->InstanceID, 'PhoneNumbers', json_encode($phoneNumbers));
+                IPS_ApplyChanges($this->InstanceID);
+                return;
+            }
+
+            //Delete unnecessary variables
+            $idents = array_column($phoneNumbers, 'VariableIdent');
+            
+            array_push(
+                $idents,
+                'ConfirmNumber',
+               'Status',
+                'ResetStatus',
+            );
+            foreach (IPS_GetChildrenIDs($this->InstanceID) as $childID) {
+                if (!in_array($this->GetIdentByID($childID), $idents)) {
+                    $this->UnregisterReference($childID);
+                    $this->UnregisterVariable($this->GetIdentByID($childID));
+                }
+            }
+        }
 
         $this->setErrorState();
         if ($this->GetStatus() != 102) {
@@ -142,6 +182,21 @@ class PhoneChain extends IPSModule
             default:
                 break;
         }
+    }
+
+    public function RequestAction($Ident, $Value)
+    {
+
+        if (in_array($Ident, ['Status', 'ConfirmNumber', 'ResetStatus'])) {
+            return;
+        }
+
+        if ($this->GetValue('Status') > 0) {
+            echo $this->Translate('Phone Chain is not ready, no changes possible');
+            return;
+        }
+        $this->SetValue($Ident, $Value);
+
     }
 
     public function UISetVisible(string $ttsType)
@@ -293,5 +348,10 @@ class PhoneChain extends IPSModule
         $this->SetTimerInterval('UpdateCall', 0);
         $this->SetBuffer('ListPosition', '0');
         $this->SetBuffer('ActiveCalls', '[]');
+    }
+
+    private function GetIdentByID(int $id): string
+    {
+        return IPS_GetObject($id)['ObjectIdent'];
     }
 }
