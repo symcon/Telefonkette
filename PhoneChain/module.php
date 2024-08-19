@@ -74,9 +74,9 @@ class PhoneChain extends IPSModule
             $phoneNumbers = json_decode($this->ReadPropertyString('PhoneNumbers'), true);
             //Create the variable
             foreach ($phoneNumbers as $key => $number) {
-                $ident = key_exists("VariableIdent", $number) ? $number['VariableIdent'] : "Position_".$key;
+                $ident = array_key_exists('VariableIdent', $number) ? $number['VariableIdent'] : 'Position_' . $key + 1;
                 if (!@$this->GetIDForIdent($ident)) {
-                    $this->MaintainVariable($ident, $number['Description'] !== '' ? $number['Description'] : 'Phone Number' . $key, 0, '', $key, true);
+                    $this->MaintainVariable($ident, array_key_exists('Description', $number) && $number['Description'] !== '' ? $number['Description'] : 'Phone Number' . $key + 1, 0, '', $key, true);
                     $this->EnableAction($ident);
                     $id = $this->GetIDForIdent($ident);
                     $this->RegisterReference($id);
@@ -92,11 +92,13 @@ class PhoneChain extends IPSModule
 
             //Delete unnecessary variables
             $idents = array_column($phoneNumbers, 'VariableIdent');
-            
+            $this->SendDebug('numbers', print_r($phoneNumbers, true), 0);
+            $this->SendDebug('idents', print_r($idents, true), 0);
+
             array_push(
                 $idents,
                 'ConfirmNumber',
-               'Status',
+                'Status',
                 'ResetStatus',
             );
             foreach (IPS_GetChildrenIDs($this->InstanceID) as $childID) {
@@ -234,7 +236,30 @@ class PhoneChain extends IPSModule
         //If maxSyncCalls not reached and not at the end of the number list
         $phoneNumbers = json_decode($this->ReadPropertyString('PhoneNumbers'), true);
         $listPosition = json_decode($this->GetBuffer('ListPosition'));
-        if ((count($activeCalls) < $this->ReadPropertyInteger('MaxSyncCallCount')) && ($listPosition < count($phoneNumbers))) {
+
+        //Lookup if there is a next phone number
+        $hasNext = false;
+        if ($this->ReadPropertyBoolean('EditableVisu')) {
+            $this->SendDebug('Edit', 'visu', 0);
+            while (($listPosition < count($phoneNumbers) && !$hasNext)) {
+                if (
+                    @$this->GetIDForIdent('Position_' . $listPosition)
+                    && !IPS_GetObject($this->GetIDForIdent('Position_' . $listPosition))['ObjectIsDisabled']
+                    && GetValue($this->GetIDForIdent('Position_' . $listPosition))
+                ) {
+                    $this->SendDebug('Has Next', 'changed', 0);
+                    $hasNext = true;
+                    break;
+                }
+
+                $listPosition++;
+            }
+        }else {
+            $hasNext = ($listPosition < count($phoneNumbers));
+        }
+        //if there is a next pos -> get the correct position
+        $this->SendDebug('Has Next', $hasNext ? 'true' : 'false', 0);
+        if ((count($activeCalls) < $this->ReadPropertyInteger('MaxSyncCallCount')) && $hasNext) {
             $call = VoIP_Connect($this->ReadPropertyInteger('VoIP'), $phoneNumbers[$listPosition]['PhoneNumber']);
             $this->SetValue('Status', $listPosition + 1);
             $this->SendDebug('New Call', json_encode($call), 0);
@@ -266,6 +291,7 @@ class PhoneChain extends IPSModule
         $form['elements'][9]['visible'] = $this->ReadPropertyBoolean('ResetStatus');
         $form['elements'][3]['items'][1]['visible'] = $this->ReadPropertyString('TTSType') == 'Static';
         $form['elements'][3]['items'][2]['visible'] = $this->ReadPropertyString('TTSType') == 'Dynamic';
+
         return json_encode($form);
     }
 
