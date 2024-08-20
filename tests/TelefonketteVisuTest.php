@@ -54,7 +54,7 @@ class TelefonketteVisuTest extends TestCase
         //Call until one number moves up
         $instanceID = $this->TelefonketteID;
         $this->setConfiguration();
-
+        RequestAction($this->TriggerID, true);
         TK_UpdateCalls($instanceID);
         TK_setTime($instanceID, strtotime('September 1 2020 13:00:10'));
         TK_UpdateCalls($instanceID);
@@ -243,22 +243,22 @@ class TelefonketteVisuTest extends TestCase
                     [
                         [
                             'PhoneNumber'   => '111111',
-                            'VariableIdent' => 'Position_0'
+                            'VariableIdent' => 'PhoneNumber_0'
                         ],
                         [
                             'PhoneNumber'   => '222222',
-                            'VariableIdent' => 'Position_1'
+                            'VariableIdent' => 'PhoneNumber_1'
                         ],
                         [
                             'PhoneNumber'   => '333333',
-                            'VariableIdent' => 'Position_2'
+                            'VariableIdent' => 'PhoneNumber_2'
                         ],  [
                             'PhoneNumber'   => '444444',
-                            'VariableIdent' => 'Position_3'
+                            'VariableIdent' => 'PhoneNumber_3'
                         ],
                         [
                             'PhoneNumber'   => '555555',
-                            'VariableIdent' => 'Position_4'
+                            'VariableIdent' => 'PhoneNumber_4'
                         ]
                     ]
                 ),
@@ -270,14 +270,16 @@ class TelefonketteVisuTest extends TestCase
         IPS_SetConfiguration($instanceID, $configuration);
         IPS_ApplyChanges($instanceID);
         //set the variable  (Pos 0 and 3 should skipped)
-        $id = IPS_GetObjectIDByIdent('Position_1', $instanceID);
+        $id = IPS_GetObjectIDByIdent('PhoneNumber_1', $instanceID);
         SetValue($id, true);
-        $id = IPS_GetObjectIDByIdent('Position_2', $instanceID);
+        $id = IPS_GetObjectIDByIdent('PhoneNumber_2', $instanceID);
         SetValue($id, true);
-        $id = IPS_GetObjectIDByIdent('Position_3', $instanceID);
+        $id = IPS_GetObjectIDByIdent('PhoneNumber_3', $instanceID);
         IPS_SetDisabled($id, true);
-        $id = IPS_GetObjectIDByIdent('Position_4', $instanceID);
+        $id = IPS_GetObjectIDByIdent('PhoneNumber_4', $instanceID);
         SetValue($id, true);
+
+        IPS_ApplyChanges($instanceID); //Don't know how to provoke the message sink, so make sure the buffer is correct
         $status = IPS\InstanceManager::getInstance($instanceID)['InstanceStatus'];
         $this->assertEquals(102, $status);
 
