@@ -26,6 +26,7 @@ class PhoneChain extends IPSModule
         $this->RegisterPropertyString('TTSType', 'Static');
         $this->RegisterPropertyString('TTSStaticText', '');
         $this->RegisterPropertyInteger('TTSDynamicVariable', 0);
+        $this->RegisterPropertyBoolean('EditableVisu', false);
         $this->RegisterPropertyString('PhoneNumbers', '[]');
         $this->RegisterPropertyInteger('MaxSyncCallCount', 2);
         $this->RegisterPropertyInteger('CallDuration', 15);
@@ -67,6 +68,47 @@ class PhoneChain extends IPSModule
         $this->SetBuffer('ActiveCalls', '[]');
         $this->SetBuffer('ListPosition', '0');
 
+        //Create the variables if the feature is true
+        if ($this->ReadPropertyBoolean('EditableVisu')) {
+            $needsReload = false;
+            $phoneNumbers = json_decode($this->ReadPropertyString('PhoneNumbers'), true);
+            //Create the variable
+            foreach ($phoneNumbers as $key => $number) {
+                $ident = array_key_exists('VariableIdent', $number) ? $number['VariableIdent'] : 'PhoneNumber_' . $key;
+                if (!@$this->GetIDForIdent($ident)) {
+                    $this->MaintainVariable($ident, array_key_exists('Description', $number) && $number['Description'] !== '' ? $number['Description'] : 'Phone Number' . $key + 1, 0, '', $key, true);
+                    $this->EnableAction($ident);
+                    $id = $this->GetIDForIdent($ident);
+                    $this->RegisterReference($id);
+                    $this->RegisterMessage($id, OM_CHANGEDISABLED);
+                    $needsReload = true;
+                }
+                $phoneNumbers[$key]['VariableIdent'] = $ident;
+            }
+            if ($needsReload) {
+                IPS_SetProperty($this->InstanceID, 'PhoneNumbers', json_encode($phoneNumbers));
+                IPS_ApplyChanges($this->InstanceID);
+                return;
+            }
+
+            //Delete unnecessary variables
+            $idents = array_column($phoneNumbers, 'VariableIdent');
+            array_push(
+                $idents,
+                'ConfirmNumber',
+                'Status',
+                'ResetStatus',
+            );
+            foreach (IPS_GetChildrenIDs($this->InstanceID) as $childID) {
+                if (!in_array($this->GetIdentByID($childID), $idents)) {
+                    $this->UnregisterReference($childID);
+                    $this->UnregisterMessage($childID, OM_CHANGEDISABLED);
+                    $this->UnregisterVariable($this->GetIdentByID($childID));
+                }
+            }
+        }
+        $this->updateBuffer();
+
         $this->setErrorState();
         if ($this->GetStatus() != 102) {
             return;
@@ -91,11 +133,11 @@ class PhoneChain extends IPSModule
         switch ($MessageID) {
             case VM_UPDATE:
                 if ($Data[0] && ($this->GetStatus() == 102) && ($this->GetValue('Status') == self::WAITING)) {
+                    $this->updateBuffer();
                     $this->SetTimerInterval('UpdateCall', 1000);
                     $this->UpdateCalls();
                 }
                 break;
-
             case self::VOIP_EVENT:
                 //Only handle messages for our active calls
                 if (!array_key_exists($Data[0], json_decode($this->GetBuffer('ActiveCalls'), true))) {
@@ -144,6 +186,21 @@ class PhoneChain extends IPSModule
         }
     }
 
+    public function RequestAction($Ident, $Value)
+    {
+
+        if (in_array($Ident, ['Status', 'ConfirmNumber', 'ResetStatus'])) {
+            return;
+        }
+
+        if ($this->GetValue('Status') > 0) {
+            echo $this->Translate('Phone Chain is not ready, no changes possible');
+            return;
+        }
+        $this->SetValue($Ident, $Value);
+
+    }
+
     public function UISetVisible(string $ttsType)
     {
         $this->UpdateFormField('TTSStaticText', 'visible', $ttsType == 'Static');
@@ -177,8 +234,9 @@ class PhoneChain extends IPSModule
         }
 
         //If maxSyncCalls not reached and not at the end of the number list
-        $phoneNumbers = json_decode($this->ReadPropertyString('PhoneNumbers'), true);
+        $phoneNumbers = json_decode($this->GetBuffer('CurrentChain'), true);
         $listPosition = json_decode($this->GetBuffer('ListPosition'));
+
         if ((count($activeCalls) < $this->ReadPropertyInteger('MaxSyncCallCount')) && ($listPosition < count($phoneNumbers))) {
             $call = VoIP_Connect($this->ReadPropertyInteger('VoIP'), $phoneNumbers[$listPosition]['PhoneNumber']);
             $this->SetValue('Status', $listPosition + 1);
@@ -211,6 +269,7 @@ class PhoneChain extends IPSModule
         $form['elements'][9]['visible'] = $this->ReadPropertyBoolean('ResetStatus');
         $form['elements'][3]['items'][1]['visible'] = $this->ReadPropertyString('TTSType') == 'Static';
         $form['elements'][3]['items'][2]['visible'] = $this->ReadPropertyString('TTSType') == 'Dynamic';
+
         return json_encode($form);
     }
 
@@ -293,5 +352,32 @@ class PhoneChain extends IPSModule
         $this->SetTimerInterval('UpdateCall', 0);
         $this->SetBuffer('ListPosition', '0');
         $this->SetBuffer('ActiveCalls', '[]');
+    }
+
+    private function GetIdentByID(int $id): string
+    {
+        return IPS_GetObject($id)['ObjectIdent'];
+    }
+
+    private function updateBuffer(): void
+    {
+        $chain = [];
+        $newPosition = 0;
+        $numbers = json_decode($this->ReadPropertyString('PhoneNumbers'), true);
+        if (!$this->ReadPropertyBoolean('EditableVisu')) {
+            $this->setBuffer('CurrentChain', json_encode($numbers));
+            return;
+        }
+        foreach ($numbers as $position => $number) {
+
+            $ident = array_key_exists('VariableIdent', $number) ? $number['VariableIdent'] : 'PhoneNumber_' . $position;
+            $id = $this->GetIDForIdent($ident);
+            if (!IPS_GetObject($id)['ObjectIsDisabled'] && $this->GetValue($ident)) {
+                $chain[$newPosition] = $number;
+                $newPosition++;
+            }
+
+        }
+        $this->SetBuffer('CurrentChain', json_encode($chain));
     }
 }

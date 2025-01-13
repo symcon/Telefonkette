@@ -53,12 +53,24 @@
             ]
         },
         {
+            "type": "CheckBox",
+            "caption": "Editable at Visualization",
+            "name": "EditableVisu"
+        },
+        {
             "type": "List",
             "name": "PhoneNumbers",
             "caption": "Phone Numbers",
             "add": true,
             "delete": true,
             "columns": [
+                {
+                    "name": "VariableIdent",
+                    "width": "0px",
+                    "add": "",
+                    "caption": "VariableIdent",
+                    "visible": false
+                },
                 {
                     "name": "PhoneNumber",
                     "caption": "Phone Number",
