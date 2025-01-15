@@ -76,7 +76,7 @@ class PhoneChain extends IPSModule
             foreach ($phoneNumbers as $key => $number) {
                 $ident = array_key_exists('VariableIdent', $number) ? $number['VariableIdent'] : 'PhoneNumber_' . $key;
                 if (!@$this->GetIDForIdent($ident)) {
-                    $this->MaintainVariable($ident, array_key_exists('Description', $number) && $number['Description'] !== '' ? $number['Description'] : 'Phone Number' . $key + 1, 0, '', $key, true);
+                    $this->MaintainVariable($ident, array_key_exists('Description', $number) && $number['Description'] !== '' ? $number['Description'] : 'Phone Number' . $key + 10, 0, '', $key, true);
                     $this->EnableAction($ident);
                     $id = $this->GetIDForIdent($ident);
                     $this->RegisterReference($id);
