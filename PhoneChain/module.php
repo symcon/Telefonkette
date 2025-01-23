@@ -76,7 +76,7 @@ class PhoneChain extends IPSModule
             foreach ($phoneNumbers as $key => $number) {
                 $ident = array_key_exists('VariableIdent', $number) ? $number['VariableIdent'] : 'PhoneNumber_' . $key;
                 if (!@$this->GetIDForIdent($ident)) {
-                    $this->MaintainVariable($ident, array_key_exists('Description', $number) && $number['Description'] !== '' ? $number['Description'] : 'Phone Number' . $key + 10, 0, '', $key, true);
+                    $this->MaintainVariable($ident, (array_key_exists('Description', $number) && $number['Description'] !== '' ? $number['Description'] : $this->Translate('Phone Number') . ' '. $key + 1), 0, '', $key + 10, true);
                     $this->EnableAction($ident);
                     $id = $this->GetIDForIdent($ident);
                     $this->RegisterReference($id);
@@ -266,7 +266,7 @@ class PhoneChain extends IPSModule
     public function GetConfigurationForm()
     {
         $form = json_decode(file_get_contents(__DIR__ . '/form.json'), true);
-        $form['elements'][9]['visible'] = $this->ReadPropertyBoolean('ResetStatus');
+        $form['elements'][10]['visible'] = $this->ReadPropertyBoolean('ResetStatus');
         $form['elements'][3]['items'][1]['visible'] = $this->ReadPropertyString('TTSType') == 'Static';
         $form['elements'][3]['items'][2]['visible'] = $this->ReadPropertyString('TTSType') == 'Dynamic';
 

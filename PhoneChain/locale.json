@@ -29,7 +29,8 @@
             "Reset Status": "Status zurücksetzen",
             "Description": "Beschreibung",
             "https://www.symcon.de/en/service/documentation/module-reference/phone-chain/": "https://www.symcon.de/de/service/dokumentation/modulreferenz/telefonansage/",
-            "Phone Chain": "Telefonkette"
+            "Phone Chain": "Telefonkette",
+            "Editable at Visualization": "In der Visualisierung bearbeitbar"
         }
     }
 }
