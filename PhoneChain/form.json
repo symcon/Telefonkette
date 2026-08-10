@@ -63,6 +63,7 @@
             "caption": "Phone Numbers",
             "add": true,
             "delete": true,
+            "onAdd": "TK_UIAssignIdents($id, $PhoneNumbers);",
             "columns": [
                 {
                     "name": "VariableIdent",

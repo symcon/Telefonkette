@@ -70,7 +70,6 @@ class PhoneChain extends IPSModule
 
         //Create the variables if the feature is true
         if ($this->ReadPropertyBoolean('EditableVisu')) {
-            $needsReload = false;
             $phoneNumbers = json_decode($this->ReadPropertyString('PhoneNumbers'), true);
             //Create the variable
             foreach ($phoneNumbers as $key => $number) {
@@ -81,14 +80,8 @@ class PhoneChain extends IPSModule
                     $id = $this->GetIDForIdent($ident);
                     $this->RegisterReference($id);
                     $this->RegisterMessage($id, OM_CHANGEDISABLED);
-                    $needsReload = true;
                 }
                 $phoneNumbers[$key]['VariableIdent'] = $ident;
-            }
-            if ($needsReload) {
-                IPS_SetProperty($this->InstanceID, 'PhoneNumbers', json_encode($phoneNumbers));
-                IPS_ApplyChanges($this->InstanceID);
-                return;
             }
 
             //Delete unnecessary variables
@@ -205,6 +198,35 @@ class PhoneChain extends IPSModule
     {
         $this->UpdateFormField('TTSStaticText', 'visible', $ttsType == 'Static');
         $this->UpdateFormField('TTSDynamicVariable', 'visible', $ttsType == 'Dynamic');
+    }
+
+    public function UIAssignIdents(IPSList $phoneNumbers)
+    {
+        $numbers = [];
+
+        //Collect the indices which are already in use
+        $usedIndices = [];
+        foreach ($phoneNumbers as $number) {
+            $numbers[] = $number;
+            if (array_key_exists('VariableIdent', $number) && preg_match('/^PhoneNumber_(\d+)$/', $number['VariableIdent'], $matches)) {
+                $usedIndices[] = intval($matches[1]);
+            }
+        }
+
+        //Assign the next free index to every entry without an ident
+        $nextIndex = 0;
+        foreach ($numbers as $key => $number) {
+            if (array_key_exists('VariableIdent', $number) && $number['VariableIdent'] !== '') {
+                continue;
+            }
+            while (in_array($nextIndex, $usedIndices)) {
+                $nextIndex++;
+            }
+            $numbers[$key]['VariableIdent'] = 'PhoneNumber_' . $nextIndex;
+            $usedIndices[] = $nextIndex;
+        }
+
+        $this->UpdateFormField('PhoneNumbers', 'values', json_encode($numbers));
     }
 
     public function UpdateCalls()
